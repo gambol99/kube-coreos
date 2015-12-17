@@ -1,0 +1,222 @@
+#cloud-config
+
+coreos:
+  etcd2:
+    proxy: on
+    listen-client-urls: https://127.0.0.1:2379
+    cert-file: /run/etcd2/etcd.pem
+    key-file: /run/etcd2/etcd-key.pem
+  fleet:
+    metadata: env=${environment},private_ipv4=$private_ipv4,region=${aws_region},role=compute,layer=compute
+    etcd_servers: https://127.0.0.1:2379
+  flannel:
+    interface: $private_ipv4
+    etcd_endpoints: https://127.0.0.1:2379
+    etcd_cafile: /etc/ssl/etcd/ca.pem
+  locksmith:
+    endpoint: https://127.0.0.1:2379
+  update:
+    reboot-strategy: 'off'
+  units:
+  - name: systemd-sysctl.service
+    command: restart
+  - name: iptables-restore.service
+    enable: true
+    command: start
+  - name: format-docker-volume.service
+    command: start
+    content: |
+      [Unit]
+      Description=Formats the docker volume
+      After=dev-xvdd.device
+      Requires=dev-xvdd.device
+      [Service]
+      Type=oneshot
+      RemainAfterExit=yes
+      ExecStart=/usr/bin/bash -c '/usr/sbin/blkid /dev/xvdd || (/usr/sbin/wipefs -f /dev/xvdd && /usr/sbin/mkfs.ext4 /dev/xvdd)'
+  - name: var-lib-docker.mount
+    command: start
+    enable: true
+    content: |
+      [Unit]
+      Description=Mount docker volume
+      Requires=format-docker-volume.service
+      After=format-docker-volume.service
+      Before=docker.service
+      [Mount]
+      What=/dev/xvdd
+      Where=/var/lib/docker
+      Type=ext4
+  - name: install-etcd-discovery.service
+    command: start
+    content: |
+      [Unit]
+      Description=Etcd Discovery Service
+      Before=etcd2.service
+
+      [Service]
+      RemainAfterExit=yes
+      Restart=always
+      RestartSec=10
+      Environment="URL=${etcd_discovery_url}"
+      Environment="FILENAME=/opt/bin/etcd-discovery"
+      Environment="FILENAME_GZ=/opt/bin/etcd-discovery.gz"
+      Environment="MD5=${etcd_discovery_md5}"
+      ExecStartPre=/usr/bin/mkdir -p /opt/bin /etc/sysconfig
+      ExecStartPre=-/usr/bin/rm -f /opt/bin/etcd-discovery
+      ExecStart=/usr/bin/bash -c 'until [[ -x $${FILENAME} ]] && [[ $(md5sum $${FILENAME} | cut -f1 -d" ") == $${MD5} ]]; \
+        do wget -q -O $${FILENAME_GZ} $${URL} && gunzip $${FILENAME_GZ} && chmod +x $${FILENAME}; done'
+  - name: etcd-discovery.service
+    command: start
+    content: |
+      [Unit]
+      Description=Etcd Discovery Service
+      Requires=update-ca-certificates.service
+      Requires=install-etcd-discovery.service
+      After=update-ca-certificates.service
+      After=install-etcd-discovery.service
+      Before=etcd2.service
+
+      [Service]
+      RemainAfterExit=yes
+      Restart=always
+      RestartSec=10
+      ExecStart=/opt/bin/etcd-discovery \
+        -scaling-group-name=${secure_asg_name} -proxy-mode=true \
+        -environment-file=/etc/sysconfig/etcd-discovery -logtostderr -v=10
+  - name: docker.service
+    drop-ins:
+    - name: 10-opts.conf
+      content: |
+        [Service]
+        Environment="DOCKER_OPTS=--iptables=false --log-opt max-size=100m --log-opt max-file=1"
+    - name: 20-flanneld.conf
+      content: |
+        [Unit]
+        After=flanneld.service
+        Requires=flanneld.service
+  - name: etcd2.service
+    command: start
+    enable: true
+    drop-ins:
+    - name: 10-dependencies.conf
+      content: |
+        [Unit]
+        Requires=update-ca-certificates.service install-s3secrets.service
+        After=update-ca-certificates.service install-s3secrets.service
+    - name: 15-s3secrets.conf
+      content: |
+        [Service]
+        RuntimeDirectory=etcd2
+        RuntimeDirectoryMode=0700
+        EnvironmentFile=/etc/s3secrets
+        ExecStartPre=/opt/bin/s3secrets s3 get -d=%t/etcd2 common/etcd.pem common/etcd-key.pem
+    - name: 30-etcd_peers.conf
+      content: |
+        [Service]
+        EnvironmentFile=/etc/sysconfig/etcd-discovery
+  - name: fleet.service
+    enable: true
+    command: start
+  - name: flanneld.service
+    command: start
+    enable: true
+    drop-ins:
+    - name: 50-network-config.conf
+      content: |
+        [Service]
+        ExecStartPre=/usr/bin/etcdctl --peers https://127.0.0.1:2379 set /coreos.com/network/config '{"Network":"{{ flannel_cidr }}","Backend":{"Type":"aws-vpc"}}'
+    - name: 10-env-config.conf
+      content: |
+        [Service]
+        EnvironmentFile=/run/flannel/options.env
+  - name: install-kubernetes.service
+    command: start
+    content: |
+      [Unit]
+      Description=Install kubernetes
+
+      [Service]
+      Type=oneshot
+      RemainAfterExit=yes
+      TimeoutStartSec=180
+      Environment="URL=${kubernetes_release_url}"
+      Environment="FILEN=/opt/bin/hyperkube"
+      Environment="MD5SUM=${kubernetes_release_md5}"
+      ExecStartPre=/usr/bin/mkdir -p /opt/bin
+      ExecStart=/usr/bin/bash -c 'until [[ -x $${FILEN} ]] && [[ $(md5sum $${FILEN} | cut -f1 -d" ") == $${MD5SUM} ]]; do wget -q -O $${FILEN} $${URL} && chmod +x $${FILEN}; done'
+  - name: install-s3secrets.service
+    command: start
+    content: |
+      [Unit]
+      Description=Install s3secrets
+      Documentation=https://github.com/UKHomeOffice/s3secrets
+      Before=etcd2.service
+
+      [Service]
+      Type=notify
+      NotifyAccess=all
+      RemainAfterExit=yes
+      TimeoutStartSec=180
+      Environment="URL=${s3secrets_release_url}"
+      Environment="FILEN=/opt/bin/s3secrets"
+      Environment="MD5SUM=${s3secrets_release_md5}"
+      ExecStartPre=/usr/bin/mkdir -p /opt/bin
+      ExecStartPre=/usr/bin/bash -c 'until [[ -x $${FILEN} ]] && [[ $(md5sum $${FILEN} | cut -f1 -d" ") == $${MD5SUM} ]]; do wget -q -O $${FILEN} $${URL} && chmod +x $${FILEN}; done'
+      ExecStart=/usr/bin/systemd-notify --ready --status="succussfully downloaded the s3secrets"
+  - name: update-ca-certificates.service
+    command: start
+    enable: true
+    content: |
+      [Unit]
+      Description=Update CA Certificates
+      Requires=install-s3secrets.service
+      After=install-s3secrets.service
+      Before=etcd2.service
+
+      [Service]
+      Type=notify
+      NotifyAccess=all
+      EnvironmentFile=/etc/environment
+      EnvironmentFile=/etc/s3secrets
+      RemainAfterExit=yes
+      TimeoutStartSec=300
+      ExecStartPre=/usr/bin/mkdir -p /etc/ssl/etcd
+      ExecStartPre=/opt/bin/s3secrets s3 get -d=/etc/ssl/certs common/ca.pem
+      ExecStartPre=/usr/bin/cp -f /etc/ssl/certs/ca.pem /etc/ssl/etcd/ca.pem
+      ExecStartPre=/usr/sbin/update-ca-certificates
+      ExecStart=/usr/bin/systemd-notify --ready --status="succussfully updated the ca root certificates"
+  # @TODO - switching the auto-update for now, doesnt work well in a ASG
+  - name: update-engine.service
+    command: stop
+    enable: false
+write_files:
+- path: /etc/sysctl.d/10-disable-ipv6.conf
+  permissions: 0644
+  owner: root
+  content: |
+    net.ipv6.conf.all.disable_ipv6 = 1
+- path: /var/lib/iptables/rules-save
+  content: |
+    *filter
+    :INPUT ACCEPT [0:0]
+    :FORWARD ACCEPT [0:0]
+    -A FORWARD -d 169.254.169.254/32 -i docker0 -p tcp -m tcp -j DROP
+    -A FORWARD -i docker0 -p tcp -m tcp --dport 2379 -j DROP
+    :OUTPUT ACCEPT [0:0]
+    COMMIT
+
+- path: /etc/secure_elb
+  permissions: 0444
+  content: |
+    KUBEAPI_MASTER=https://${kube_elb_dns_name}
+- path: /etc/s3secrets
+  content: |
+    AWS_BUCKET=${secrets_bucket_name}
+    AWS_DEFAULT_REGION=${aws_region}
+- path: /etc/aws-environment
+  content: |
+    AWS_REGION=${aws_region}
+    DNS_ZONE_NAME=${dns_zone_name}
+    ENVIRONMENT=${environment}
+    PLATFORM_NAME=${platform}

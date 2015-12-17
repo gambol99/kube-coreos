@@ -1,0 +1,19 @@
+#
+#   Author: Rohith
+#   Date: 2015-12-17 13:33:13 +0000 (Thu, 17 Dec 2015)
+#
+#  vim:ts=2:sw=2:et
+#
+
+*.swp
+*.pem
+*.csr
+*.rollout
+terraform.tfstate.backup
+terraform.tfstate
+secrets.env
+secrets/
+environments/dev.tfvars
+kube/
+.terraform
+TODO

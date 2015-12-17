@@ -1,0 +1,24 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Resource": "arn:aws:kms:${aws_region}:*:key/${kms_master_id}",
+      "Effect": "Allow",
+      "Action" : [
+        "kms:Decrypt"
+      ]
+    },{
+      "Resource": "arn:aws:s3:::${secrets_bucket_name}/*",
+      "Effect": "Allow",
+      "Action": [
+        "s3:Get*"
+      ]
+    },{
+      "Resource": "arn:aws:s3:::${secrets_bucket_name}",
+      "Effect": "Allow",
+      "Action": [
+        "s3:List*"
+      ]
+    }
+  ]
+}
