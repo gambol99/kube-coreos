@@ -1,0 +1,59 @@
+#!/bin/bash
+
+WORKDIR="/kube-coreos"
+KUBE_IMAGE=${KUBE_IMAGE:="docker.io/gambol99/kube-coreos"}
+KUBE_TAG=${KUBE_TAG:-"latest"}
+PLATFORM_ENV=${PLATFORM_ENV:-""}
+DOCKER=`which docker`
+NC='\e[0m'
+YELLOW='\e[0;33m'
+
+usage() {
+  cat <<EOF
+  Usage: $(basename $0) -e <ENVIRONMENT>
+    -e|--env ENVIRONMENT    : the envirnoment we are running
+    -h|--help               : display this usage menu
+EOF
+}
+
+annonce() {
+  echo "--> $@"
+}
+
+failed() {
+  echo "[error] $@"
+  exit 1
+}
+
+run() {
+  /usr/bin/docker run -ti --rm \
+    -v ${PWD}/${ENVIRONMENT_FILE}:${WORKDIR}/env.tfvars \
+    -v ${PWD}/ca:${WORKDIR}/ca \
+    -v ${PWD}/kubernetes:${WORKDIR}/kubernetes \
+    -v ${PWD}/terraform:${WORKDIR}/terraform \
+    -v ${PWD}/units:${WORKDIR}/units \
+    -v ${PWD}/scripts:${WORKDIR}/scripts \
+    -v ${PWD}/vault:${WORKDIR}/vault \
+    ${KUBE_IMAGE}:${KUBE_TAG}
+}
+
+[ -z "${DOCKER}" ] && failed "unable to find the docker command in your command path"
+
+# step: get the command line options
+while [ $# -gt 0 ]; do
+  case $1 in
+    -e|--env)   PLATFORM_ENV=$2; shift 2 ;;
+    -h|--help)  usage;                   ;;
+    *)          shift;                   ;;
+  esac
+done
+
+# step: check the docker container exists
+ENVIRONMENT_FILE="./environments/${PLATFORM_ENV}.tfvars"
+
+[ -z "${PLATFORM_ENV}"     ] && failed "you need to specify the environment, either -e or set PLATFORM_ENV environment"
+[ -f "${ENVIRONMENT_FILE}" ] || failed "the environment file ${ENVIRONMENT_FILE} does not exist"
+
+echo -e "--> Running Platform, with environment: ${YELLOW}${PLATFORM_ENV}${NC}"
+
+run
