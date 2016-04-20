@@ -36,11 +36,11 @@ variable "etcd_discovery_md5" {
 }
 variable "kubernetes_release_url" {
   description = "The Kubernetes url to deploy in the cluster"
-  default     = "https://storage.googleapis.com/kubernetes-release/release/v1.1.7/bin/linux/amd64/hyperkube"
+  default     = "https://storage.googleapis.com/kubernetes-release/release/v1.2.2/bin/linux/amd64/hyperkube"
 }
 variable "kubernetes_release_md5" {
   description = "The Kubernetes release md5"
-  default     = "dd57058362afce77a94ba4e9152a4525"
+  default     = "b2e46ddc66a3d06f7ef8e8728822ca21"
 }
 variable "ssh_access_list" {
   description = "A comma separated list of ip addresses to permit external ssh access"
