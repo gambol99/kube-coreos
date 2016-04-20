@@ -12,7 +12,7 @@ ExecStartPre=/opt/bin/s3secrets s3 get -d=%t/kube-apiserver \
   secure/kubeapi.pem secure/kubeapi-key.pem secure/auth-policy.json secure/tokens.csv
 
 ExecStart=/opt/bin/hyperkube apiserver \
-  --admission-control=NamespaceLifecycle,NamespaceExists,LimitRanger,SecurityContextDeny,ResourceQuota \
+  --admission-control=NamespaceLifecycle,NamespaceExists,LimitRanger,ServiceAccount,SecurityContextDeny,ResourceQuota \
   --cloud-provider=aws \
   --insecure-port=8080 \
   --secure-port=6443 \
@@ -23,7 +23,8 @@ ExecStart=/opt/bin/hyperkube apiserver \
   --etcd-servers=https://127.0.0.1:2379 \
   --tls-cert-file=%t/kube-apiserver/kubeapi.pem \
   --tls-private-key-file=%t/kube-apiserver/kubeapi-key.pem \
-  --logtostderr=true
+  --logtostderr=true \
+  --v=0
 
 [X-Fleet]
 Global=true

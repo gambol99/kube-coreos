@@ -6,8 +6,8 @@ WORKDIR /kube-coreos
 ENV VAULT_VERSION 0.5.2
 ENV TERRAFORM_VERSION 0.6.14
 ENV S3SECRETS_VERSION 0.1.3
-ENV FLEETCTL_VERSION 0.11.5
-ENV KUBECTL_VERSION 1.1.7
+ENV FLEETCTL_VERSION 0.11.7
+ENV KUBECTL_VERSION 1.2.2
 
 RUN dnf install -y -q git unzip procps-ng openssl jq which tar openssh-clients && dnf clean all
 RUN pip3 install awscli

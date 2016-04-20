@@ -10,21 +10,6 @@ provider "aws" {
 }
 
 #
-## Terraform remote state
-#
-#resource "terraform_remote_state" "state" {
-#  backend = "s3"
-#  config {
-#    access_key  = "${var.aws_access_key}"
-#    bucket      = "${var.terraform_bucket_name}"
-#    key         = "${var.aws_region}/${var.environment}/${var.platform}/terraform.tfstate"
-#    region      = "${var.aws_region}"
-#    secret_key  = "${var.aws_secret_key}"
-#    encrypt     = true
-#  }
-#}
-
-#
 ## Default Environment Keypair
 #
 resource "aws_key_pair" "default" {

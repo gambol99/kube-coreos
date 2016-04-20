@@ -23,11 +23,12 @@ ExecStart=/opt/bin/hyperkube kubelet \
   --kubeconfig=%t/kube-kubelet/kubeconfig_kubelet \
   --cluster-dns=10.200.0.10 \
   --cluster-domain=cluster.local \
-  --allow-privileged=false \
   --image-gc-high-threshold=60 \
   --image-gc-low-threshold=40 \
-  --maximum-dead-containers=11 \
+  --maximum-dead-containers=10 \
   --maximum-dead-containers-per-container=1 \
+  --image-gc-high-threshold=60 \
+  --image-gc-low-threshold=40 \
   --cpu-cfs-quota=true \
   --logtostderr=true
 

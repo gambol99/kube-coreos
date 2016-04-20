@@ -51,7 +51,7 @@ done
 # step: check the docker container exists
 ENVIRONMENT_FILE="./environments/${PLATFORM_ENV}.tfvars"
 
-[ -z "${PLATFORM_ENV}"     ] && failed "you need to specify the environment, either -e or set PLATFORM_ENV environment"
+[ -z "${PLATFORM_ENV}"     ] && failed "you need to specify the environment, either -e or set PLATFORM_ENV environment, this references the file environments/<PLATFORM_ENV>.tfvars"
 [ -f "${ENVIRONMENT_FILE}" ] || failed "the environment file ${ENVIRONMENT_FILE} does not exist"
 
 echo -e "--> Running Platform, with environment: ${YELLOW}${PLATFORM_ENV}${NC}"
