@@ -17,6 +17,9 @@ if [ -n "${TERRAFORM_BUCKET}" ]; then
         --backend-config="encrypt=true"
       terraform remote pull
     ) || failed "failed to initialize or pull the terraform remote configuration"
+  else
+    annonce "Retrieving the terraform remote state"
+    terraform remote pull || failed "unable to pull the terraform remote state"
   fi
 fi
 
