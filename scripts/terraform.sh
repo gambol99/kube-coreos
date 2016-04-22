@@ -18,8 +18,11 @@ if [ -n "${TERRAFORM_BUCKET}" ]; then
       terraform remote pull
     ) || failed "failed to initialize or pull the terraform remote configuration"
   else
-    annonce "Retrieving the terraform remote state"
-    terraform remote pull || failed "unable to pull the terraform remote state"
+    (
+      annonce "Retrieving the terraform remote state"
+      cd terraform
+      terraform remote pull
+    ) || failed "unable to pull the terraform remote state"
   fi
 fi
 

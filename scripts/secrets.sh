@@ -35,9 +35,9 @@ upload_secrets() {
 fetch_secrets() {
   annonce "Fetching the secrets to the s3 bucket: ${CONFIG_SECRET_BUCKET_NAME}"
   for _path in secure compute locked common; do
-    s3secrets s3 get -b ${CONFIG_SECRET_BUCKET_NAME} -R -d ${SECRETS_DIR} ${_path}
+    s3secrets s3 get -b ${CONFIG_SECRET_BUCKET_NAME} -R -d ${SECRETS_DIR} ${_path} >/dev/null 2>&1 || true
   done
-  s3secrets s3 get -b ${CONFIG_SECRET_BUCKET_NAME} -R -N -d ${SECRETS_DIR} manifests/ >/dev/null 2>&1
+  s3secrets s3 get -b ${CONFIG_SECRET_BUCKET_NAME} -R -N -d ${SECRETS_DIR} manifests/ >/dev/null 2>&1 || true
 }
 
 case "$1" in
