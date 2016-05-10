@@ -197,11 +197,11 @@ variable "secure_asg_grace_period" {
 #
 ## MISC RELATED ##
 #
-variable "s3secrets_release_md5" {
-  description = "The md5 of the s3secrets release we are using"
-  default     = "ec5bc16e6686c365d2ca753d31d62fd5"
+variable "kmsctl_release_md5" {
+  description = "The md5 of the kmsctl release we are using"
+  default     = "243b9cd01623b372c71e00e9953309e5"
 }
-variable "s3secrets_release_url" {
-  description = "The url for the s3secrets release we are using"
-  default     = "https://github.com/UKHomeOffice/s3secrets/releases/download/v0.1.3/s3secrets_v0.1.3_linux_x86_64"
+variable "kmsctl_release_url" {
+  description = "The url for the kmsctl release we are using"
+  default     = "https://github.com/gambol99/kmsctl/releases/download/v0.0.2/kmsctl_v0.0.2_linux_x86_64.gz"
 }

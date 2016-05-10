@@ -4,6 +4,7 @@
 #
 resource "template_file" "secure" {
   template = "${file(\"kubernetes/assets/iam/secure-role.json\")}"
+
   vars = {
     aws_region          = "${var.aws_region}"
     environment         = "${var.environment}"
@@ -47,8 +48,8 @@ resource "template_file" "secure_user_data" {
     kubernetes_release_md5 = "${var.kubernetes_release_md5}"
     kubernetes_release_url = "${var.kubernetes_release_url}"
     platform               = "${var.platform}"
-    s3secrets_release_md5  = "${var.s3secrets_release_md5}"
-    s3secrets_release_url  = "${var.s3secrets_release_url}"
+    kmsctl_release_md5     = "${var.kmsctl_release_md5}"
+    kmsctl_release_url     = "${var.kmsctl_release_url}"
     secrets_bucket_name    = "${var.secrets_bucket_name}"
   }
 }
