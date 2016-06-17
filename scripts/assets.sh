@@ -124,13 +124,13 @@ kube_auth_policy() {
   if [ ! -f "${KUBEAPI_AUTH}" ]; then
     annonce "Generating the Kubernetes authentication policy"
     cat <<EOF > ${KUBEAPI_AUTH}
-{"user":"admin"}
-{"user":"controller"}
-{"user":"scheduler"}
-{"user":"skydns"}
-{"user":"kubelet"}
-{"user":"proxy"}
-{"user":"service"}
+{ "apiVersion": "abac.authorization.kubernetes.io/v1beta1", "kind": "Policy", "spec": { "user":"*", "nonResourcePath": "*", "readonly": true}}
+{ "apiVersion": "abac.authorization.kubernetes.io/v1beta1", "kind": "Policy", "spec": { "user":"admin", "namespace": "*", "resource": "*", "apiGroup": "*" }}
+{ "apiVersion": "abac.authorization.kubernetes.io/v1beta1", "kind": "Policy", "spec": { "user":"controller-manager", "namespace": "*", "resource": "*", "apiGroup": "*" }}
+{ "apiVersion": "abac.authorization.kubernetes.io/v1beta1", "kind": "Policy", "spec": { "user":"scheduler", "namespace": "*", "resource": "*", "apiGroup": "*" }}
+{ "apiVersion": "abac.authorization.kubernetes.io/v1beta1", "kind": "Policy", "spec": { "user":"kubelet", "namespace": "*", "resource": "*" }}
+{ "apiVersion": "abac.authorization.kubernetes.io/v1beta1", "kind": "Policy", "spec": { "user":"proxy", "namespace": "*", "resource": "*", "readonly": true }}
+{ "apiVersion": "abac.authorization.kubernetes.io/v1beta1", "kind": "Policy", "spec": { "user":"skydns", "namespace": "*", "resource": "*", "readonly": true }}
 EOF
   fi
 }
