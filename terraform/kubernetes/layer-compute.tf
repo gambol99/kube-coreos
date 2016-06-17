@@ -49,8 +49,8 @@ resource "template_file" "compute_user_data" {
     kubernetes_release_md5   = "${var.kubernetes_release_md5}"
     kubernetes_release_url   = "${var.kubernetes_release_url}"
     platform                 = "${var.platform}"
-    s3secrets_release_md5    = "${var.s3secrets_release_md5}"
-    s3secrets_release_url    = "${var.s3secrets_release_url}"
+    kmsctl_release_md5       = "${var.kmsctl_release_md5}"
+    kmsctl_release_url       = "${var.kmsctl_release_url}"
     secrets_bucket_name      = "${var.secrets_bucket_name}"
     secure_asg_name          = "${var.environment}-secure-asg"
   }

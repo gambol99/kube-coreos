@@ -81,25 +81,25 @@ coreos:
         [Service]
         Environment="ETCD_ADVERTISE_CLIENT_URLS=https://%H:2379"
         Environment="ETCD_INITIAL_ADVERTISE_PEER_URLS=https://%H:2380"
-    - name: 15-s3secrets.conf
+    - name: 15-kmsctl.conf
       content: |
         [Service]
         RuntimeDirectory=etcd2
         RuntimeDirectoryMode=0700
-        EnvironmentFile=/etc/s3secrets
-        ExecStartPre=/opt/bin/s3secrets s3 get -d=%t/etcd2 common/etcd.pem common/etcd-key.pem
+        EnvironmentFile=/etc/kmsctl
+        ExecStartPre=/opt/bin/kmsctl get -d=%t/etcd2 common/etcd.pem common/etcd-key.pem
     - name: 30-etcd_peers.conf
       content: |
         [Service]
         EnvironmentFile=/etc/sysconfig/etcd-discovery
   - name: fleet.service
     command: start
-  - name: install-s3secrets.service
+  - name: install-kmsctl.service
     command: start
     content: |
       [Unit]
-      Description=Install s3secrets
-      Documentation=https://github.com/UKHomeOffice/s3secrets
+      Description=Install kmsctl
+      Documentation=https://github.com/gambol99/kmsctl
       Before=etcd2.service
 
       [Service]
@@ -107,12 +107,12 @@ coreos:
       NotifyAccess=all
       RemainAfterExit=yes
       TimeoutStartSec=180
-      Environment="URL=${s3secrets_release_url}"
-      Environment="FILEN=/opt/bin/s3secrets"
-      Environment="MD5SUM=${s3secrets_release_md5}"
+      Environment="URL=${kmsctl_release_url}"
+      Environment="FILEN=/opt/bin/kmsctl"
+      Environment="MD5SUM=${kmsctl_release_md5}"
       ExecStartPre=/usr/bin/mkdir -p /opt/bin
-      ExecStartPre=/usr/bin/bash -c 'until [[ -x $${FILEN} ]] && [[ $(md5sum $${FILEN} | cut -f1 -d" ") == $${MD5SUM} ]]; do wget -q -O $${FILEN} $${URL} && chmod +x $${FILEN}; done'
-      ExecStart=/usr/bin/systemd-notify --ready --status="succussfully downloaded the s3secrets"
+      ExecStartPre=/usr/bin/bash -c 'until [[ -x $${FILEN} ]] && [[ $(md5sum $${FILEN} | cut -f1 -d" ") == $${MD5SUM} ]]; do wget -q -O $${FILEN}.gz $${URL} && gunzip $${FILEN}.gz && chmod +x $${FILEN}; done'
+      ExecStart=/usr/bin/systemd-notify --ready --status="succussfully downloaded the kmsctl"
   - name: install-kubernetes.service
     command: start
     content: |
@@ -134,19 +134,19 @@ coreos:
     content: |
       [Unit]
       Description=Update CA Certificates
-      Requires=install-s3secrets.service
-      After=install-s3secrets.service
+      Requires=install-kmsctl.service
+      After=install-kmsctl.service
       Before=etcd2.service
 
       [Service]
       Type=notify
       NotifyAccess=all
       EnvironmentFile=/etc/environment
-      EnvironmentFile=/etc/s3secrets
+      EnvironmentFile=/etc/kmsctl
       RemainAfterExit=yes
       TimeoutStartSec=300
       ExecStartPre=/usr/bin/mkdir -p /etc/ssl/etcd
-      ExecStartPre=/opt/bin/s3secrets s3 get -d=/etc/ssl/certs common/ca.pem
+      ExecStartPre=/opt/bin/kmsctl get -d=/etc/ssl/certs common/ca.pem
       ExecStartPre=/usr/bin/cp -f /etc/ssl/certs/ca.pem /etc/ssl/etcd/ca.pem
       ExecStartPre=/usr/sbin/update-ca-certificates
       ExecStart=/usr/bin/systemd-notify --ready --status="succussfully updated the ca root certificates"
@@ -160,7 +160,7 @@ write_files:
   owner: root
   content: |
     net.ipv6.conf.all.disable_ipv6 = 1
-- path: /etc/s3secrets
+- path: /etc/kmsctl
   content: |
     AWS_BUCKET=${secrets_bucket_name}
     AWS_DEFAULT_REGION=${aws_region}
