@@ -16,7 +16,7 @@ upload_secrets() {
 
 fetch_secrets() {
   annonce "Fetching the secrets to the s3 bucket: ${CONFIG_SECRET_BUCKET_NAME}"
-  kmsctl get --bucket ${CONFIG_SECRET_BUCKET_NAME} -d==${SECRETS_DIR}  --recursive /
+  kmsctl get --bucket ${CONFIG_SECRET_BUCKET_NAME} -d=${SECRETS_DIR}  --recursive /
 }
 
 case "$1" in

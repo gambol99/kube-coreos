@@ -212,7 +212,7 @@ coreos:
       ExecStart=/opt/bin/hyperkube kubelet \
         --cloud-provider=aws \
         --address=0.0.0.0 \
-        --api-servers=${KUBEAPI_MASTER} \
+        --api-servers=$${KUBEAPI_MASTER} \
         --kubeconfig=%t/kubelet/kubeconfig_kubelet \
         --cluster-dns=10.200.0.10 \
         --cluster-domain=cluster.local \
@@ -245,7 +245,7 @@ coreos:
 
     ExecStartPre=/opt/bin/s3secrets s3 get -d=%t/kube-proxy compute/kubeconfig_proxy
     ExecStart=/opt/bin/hyperkube proxy \
-      --master=${KUBEAPI_MASTER} \
+      --master=$${KUBEAPI_MASTER} \
       --kubeconfig=%t/kube-proxy/kubeconfig_proxy \
       --proxy-mode=iptables \
       --logtostderr=true
