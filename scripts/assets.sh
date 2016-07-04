@@ -6,20 +6,16 @@ source scripts/environment.sh || exit 1
 
 annonce "Checking the secrets have been generated"
 
-TOKENS_CSV="${SECRETS_DIR}/tokens.csv"
-KUBEAPI_AUTH="${SECRETS_DIR}/auth-policy.json"
-ETCD_CERT_KEY="${SECRETS_DIR}/etcd-key.pem"
-ETCD_CERT="${SECRETS_DIR}/etcd.pem"
-ETCD_CSR="${SECRETS_DIR}/etcd-csr.json"
-PLATFORM_CA_KEY="${SECRETS_DIR}/ca-key.pem"
-PLATFORM_CA="${SECRETS_DIR}/ca.pem"
-VAULT_CERT_KEY="${SECRETS_DIR}/vault-key.pem"
-VAULT_CERT="${SECRETS_DIR}/vault.pem"
-VAULT_CSR="${SECRETS_DIR}/vault-csr.json"
-KUBEAPI_CERT_KEY="${SECRETS_DIR}/kubeapi-key.pem"
-KUBEAPI_CERT="${SECRETS_DIR}/kubeapi.pem"
-KUBEAPI_CSR="${SECRETS_DIR}/kubeapi-csr.json"
-
+TOKENS_CSV="${SECRETS_DIR}/secure/tokens.csv"
+KUBEAPI_AUTH="${SECRETS_DIR}/secure/auth-policy.json"
+ETCD_CSR="${SECRETS_DIR}/secure/etcd-csr.json"
+KUBEAPI_CERT_KEY="${SECRETS_DIR}/secure/kubeapi-key.pem"
+KUBEAPI_CERT="${SECRETS_DIR}/secure/kubeapi.pem"
+KUBEAPI_CSR="${SECRETS_DIR}/secure/kubeapi-csr.json"
+ETCD_CERT_KEY="${SECRETS_DIR}/common/etcd-key.pem"
+ETCD_CERT="${SECRETS_DIR}/common/etcd.pem"
+PLATFORM_CA="${SECRETS_DIR}/common/ca.pem"
+PLATFORM_CA_KEY="${SECRETS_DIR}/locked/ca-key.pem"
 CERTITIFATE_COUNTRY=${CERTITIFATE_COUNTRY:-"GB"}
 CERTITIFATE_COUNTY=${CERTIFICATE_COUNTY:-"London"}
 CERTITIFATE_ORGANIZATION=${CERTIFICATE_ORGANIZATION:-"Kubernetes"}
@@ -54,38 +50,31 @@ EOF
 certificates() {
   # step: generate the csr for the platform
   make_csr "etcd"  "\"*.${AWS_DEFAULT_REGION}.compute.internal\"" > ${ETCD_CSR}
-  make_csr "vault" "\"vault.${CONFIG_DNS_ZONE_NAME}\",\"vault.platform.cluster.local\"" > ${VAULT_CSR}
   make_csr "kubeapi" "\"kubeapi.${CONFIG_DNS_ZONE_NAME}\"" > ${KUBEAPI_CSR}
 
   # step: generate the certificates if required
   annonce "Generating the certificates for the platform"
   if [ ! -f "${PLATFORM_CA}" ]; then
     annonce "Generating the Platform CA"
-    cfssl gencert -initca ca/ca-csr.json | cfssljson -bare ${SECRETS_DIR}/ca >/dev/null || failed "unable to generate the ca"
-    cat ${PLATFORM_CA} ${PLATFORM_CA_KEY} > ${SECRETS_DIR}/ca-bundle.pem
+    cfssl gencert -initca ca/ca-csr.json | cfssljson -bare ${SECRETS_DIR}/common/ca >/dev/null || failed "unable to generate the ca"
+    mv ${SECRETS_DIR}/common/ca-key.pem ${PLATFORM_CA_KEY}
   fi
 
   if [ ! -f "${ETCD_CERT}" ]; then
     annonce "Generating the Etcd certificates"
     cfssl gencert -ca=${PLATFORM_CA} -ca-key=${PLATFORM_CA_KEY} \
-      -config=ca/ca-config.json -profile=server ${ETCD_CSR} | cfssljson -bare ${SECRETS_DIR}/etcd >/dev/null || failed "unable to generate the etcd certificate"
-  fi
-
-  if [ ! -f  "${VAULT_CERT}" ]; then
-    annonce "Generating the Vault certificates"
-    cfssl gencert -ca=${PLATFORM_CA} -ca-key=${PLATFORM_CA_KEY} \
-      -config=ca/ca-config.json -profile=server ${VAULT_CSR} | cfssljson -bare ${SECRETS_DIR}/vault >/dev/null || failed "unable to generate the vault certificate"
+      -config=ca/ca-config.json -profile=server ${ETCD_CSR} | cfssljson -bare ${SECRETS_DIR}/common/etcd >/dev/null || failed "unable to generate the etcd certificate"
   fi
 
   if [ ! -f "${KUBEAPI_CERT}" ]; then
     annonce "Generating the KubeAPI certificates"
     cfssl gencert -ca=${PLATFORM_CA} -ca-key=${PLATFORM_CA_KEY} \
-      -config=ca/ca-config.json -profile=server ${KUBEAPI_CSR} | cfssljson -bare ${SECRETS_DIR}/kubeapi >/dev/null || failed "unable to generate the kubeapi certificate"
+      -config=ca/ca-config.json -profile=server ${KUBEAPI_CSR} | cfssljson -bare ${SECRETS_DIR}/secure/kubeapi >/dev/null || failed "unable to generate the kubeapi certificate"
   fi
 }
 
 make_kubeconfig() {
-  cat <<EOF > ${SECRETS_DIR}/kubeconfig_${1}
+  cat <<EOF > ${SECRETS_DIR}/secure/kubeconfig_${1}
 apiVersion: v1
 kind: Config
 clusters:
@@ -115,6 +104,9 @@ kube_configs() {
       make_kubeconfig "${_username}" "${token}" "${userid}"
     fi
   done
+  # step: move the kube config to compute
+  mv ${SECRETS_DIR}/secure/kubeconfig_{kubelet,proxy} ${SECRETS_DIR}/compute
+  
   # step: copy the admin kubeconfig to $HOME
   mkdir -p ${HOME}/.kube
   [ -L "${PWD}/${SECRETS_DIR}/kubeconfig_admin" ] || ln -sf ${PWD}/${SECRETS_DIR}/kubeconfig_admin ${HOME}/.kube/config

@@ -20,7 +20,7 @@ variable "secrets_bucket_name" {
 }
 variable "coreos_image" {
   description = "The CoreOS image ami we should be using"
-  default     = "ami-2cf84d5f"
+  default     = "ami-7a46d809"
 }
 variable "flannel_cidr" {
   description = "The flannel overlay network cidr"
@@ -36,11 +36,11 @@ variable "etcd_discovery_md5" {
 }
 variable "kubernetes_release_url" {
   description = "The Kubernetes url to deploy in the cluster"
-  default     = "https://storage.googleapis.com/kubernetes-release/release/v1.2.2/bin/linux/amd64/hyperkube"
+  default     = "https://storage.googleapis.com/kubernetes-release/release/v1.2.4/bin/linux/amd64/hyperkube"
 }
 variable "kubernetes_release_md5" {
   description = "The Kubernetes release md5"
-  default     = "b2e46ddc66a3d06f7ef8e8728822ca21"
+  default     = "3b26f0e01bd8b96c8c91cfeddb58e69b"
 }
 variable "ssh_access_list" {
   description = "A comma separated list of ip addresses to permit external ssh access"
@@ -199,9 +199,9 @@ variable "secure_asg_grace_period" {
 #
 variable "kmsctl_release_md5" {
   description = "The md5 of the kmsctl release we are using"
-  default     = "243b9cd01623b372c71e00e9953309e5"
+  default     = "29ddd235688ee07f94d2e2fcdb086a10"
 }
 variable "kmsctl_release_url" {
   description = "The url for the kmsctl release we are using"
-  default     = "https://github.com/gambol99/kmsctl/releases/download/v0.0.2/kmsctl_v0.0.2_linux_x86_64.gz"
+  default     = "https://github.com/gambol99/kmsctl/releases/download/v0.1.0/kmsctl_v0.1.0_linux_x86_64.gz"
 }

@@ -162,7 +162,7 @@ write_files:
     net.ipv6.conf.all.disable_ipv6 = 1
 - path: /etc/kmsctl
   content: |
-    AWS_BUCKET=${secrets_bucket_name}
+    AWS_S3_BUCKET=${secrets_bucket_name}
     AWS_DEFAULT_REGION=${aws_region}
 - path: /etc/aws-environment
   content: |

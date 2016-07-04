@@ -29,11 +29,10 @@ run() {
   /usr/bin/docker run -ti --rm \
     -v ${PWD}/${ENVIRONMENT_FILE}:${WORKDIR}/env.tfvars \
     -v ${PWD}/ca:${WORKDIR}/ca \
-    -v ${PWD}/kubernetes:${WORKDIR}/kubernetes \
+    -v ${PWD}/kube:${WORKDIR}/kubernetes \
     -v ${PWD}/terraform:${WORKDIR}/terraform \
     -v ${PWD}/units:${WORKDIR}/units \
     -v ${PWD}/scripts:${WORKDIR}/scripts \
-    -v ${PWD}/vault:${WORKDIR}/vault \
     ${KUBE_IMAGE}:${KUBE_TAG}
 }
 

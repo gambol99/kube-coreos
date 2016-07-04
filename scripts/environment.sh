@@ -67,8 +67,9 @@ done < <(set | grep ^CONFIG_)
 
 export COMMON_FILES="ca.pem etcd-key.pem etcd.pem"
 export COMPUTE_FILES="kubeconfig_kubelet kubeconfig_proxy"
-export LOCKED_FILES="ca-bundle.pem ca-key.pem ca.csr dev dev.pub etcd-csr.json etcd.csr"
-export SECURE_FILES="auth-policy.json kubeapi-key.pem kubeapi.csr kubeapi.pem kubeconfig_admin kubeconfig_controller kubeconfig_scheduler tokens.csv vault-csr.json vault-key.pem vault.csr vault.pem"
+export LOCKED_FILES="ca-key.pem ca.csr dev dev.pub etcd-csr.json etcd.csr"
+export SECURE_FILES="auth-policy.json kubeapi-key.pem kubeapi.csr kubeapi.pem kubeconfig_admin kubeconfig_controller kubeconfig_scheduler tokens.csv"
 export ENVIRONMENT_SET=1
 
-mkdir -p $SECRETS_DIR
+mkdir -p ${SECRETS_DIR}
+mkdir -p ${SECRETS_DIR}/{secure,compute,common,locked}
