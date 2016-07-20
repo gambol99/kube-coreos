@@ -1,0 +1,54 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: kube-apiserver
+  namespace: kube-system
+spec:
+  hostNetwork: true
+  containers:
+  - name: kube-apiserver
+    image: ${kubernetes_image}:${kubernetes_version}
+    command:
+    - /hyperkube
+    - apiserver
+    - --bind-address=0.0.0.0
+    - --admission-control=NamespaceLifecycle,NamespaceExists,LimitRanger,ServiceAccount,SecurityContextDeny,ResourceQuota
+    - --advertise-address=${ADVERTISE_IP}
+    - --allow-privileged=true
+    - --authorization-mode=ABAC
+    - --authorization-policy-file=/etc/secrets/auth-policy.json
+    - --etcd-servers=https://127.0.0.1:2379
+    - --runtime-config=extensions/v1beta1/networkpolicies=true
+    - --secure-port=443
+    - --service-account-key-file=/etc/secrets/kubeapi-key.pem
+    - --service-cluster-ip-range={{kubernetes_service_range}}
+    - --tls-cert-file=/etc/secret/kubeapi.pem
+    - --tls-private-key-file=/etc/secrets/kubeapi-key.pem
+    livenessProbe:
+      httpGet:
+        host: 127.0.0.1
+        port: 8080
+        path: /healthz
+      initialDelaySeconds: 15
+      timeoutSeconds: 15
+    ports:
+    - containerPort: 443
+      hostPort: 443
+      name: https
+    - containerPort: 8080
+      hostPort: 8080
+      name: local
+    volumeMounts:
+    - mountPath: /etc/secrets
+      name: secrets
+      readOnly: true
+    - mountPath: /etc/ssl/certs
+      name: certs
+      readOnly: true
+  volumes:
+  - name: secrets
+    hostPath:
+      path: /run/kubelet
+  - name: certs
+    hostPath:
+      path: /usr/share/ca-certificates

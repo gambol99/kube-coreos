@@ -4,13 +4,22 @@
 #
 source scripts/environment.sh || exit 1
 
-export AWS_KMS_ID=${CONFIG_AWS_KMS_ID}
-
 upload_secrets() {
   annonce "Uploading the secrets to the s3 bucket: ${CONFIG_SECRET_BUCKET_NAME}"
   (
     cd secrets/
-    kmsctl put --bucket ${CONFIG_SECRET_BUCKET_NAME} --kms ${CONFIG_AWS_KMS_ID} .
+    for _file in ${COMMON_FILES}; do
+      kmsctl put --bucket ${CONFIG_SECRET_BUCKET_NAME} --kms ${CONFIG_AWS_KMS_ID} --path common ${_file}
+    done
+    for _file in ${COMPUTE_FILES}; do
+      kmsctl put --bucket ${CONFIG_SECRET_BUCKET_NAME} --kms ${CONFIG_AWS_KMS_ID} --path compute ${_file}
+    done
+    for _file in ${LOCKED_FILES}; do
+      kmsctl put --bucket ${CONFIG_SECRET_BUCKET_NAME} --kms ${CONFIG_AWS_KMS_ID} --path locked ${_file}
+    done
+    for _file in ${SECURE_FILES}; do
+      kmsctl put --bucket ${CONFIG_SECRET_BUCKET_NAME} --kms ${CONFIG_AWS_KMS_ID} --path secure ${_file}
+    done
   )
 }
 

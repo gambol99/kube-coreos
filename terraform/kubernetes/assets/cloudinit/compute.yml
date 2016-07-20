@@ -109,8 +109,7 @@ coreos:
         [Service]
         EnvironmentFile=/etc/sysconfig/etcd-discovery
   - name: fleet.service
-    enable: true
-    command: start
+    enable: false
   - name: flanneld.service
     command: start
     enable: true
@@ -123,23 +122,6 @@ coreos:
       content: |
         [Service]
         EnvironmentFile=/run/flannel/options.env
-  - name: install-kubernetes.service
-    command: start
-    content: |
-      [Unit]
-      Description=Install kubernetes
-
-      [Service]
-      Type=notify
-      NotifyAccess=all
-      RemainAfterExit=yes
-      TimeoutStartSec=180
-      Environment="URL=${kubernetes_release_url}"
-      Environment="FILE=/opt/bin/hyperkube"
-      Environment="MD5SUM=${kubernetes_release_md5}"
-      ExecStartPre=/usr/bin/mkdir -p /opt/bin
-      ExecStartPre=/usr/bin/bash -c 'until [[ -x $${FILE} ]] && [[ $(md5sum $${FILE} | cut -f1 -d" ") == $${MD5SUM} ]]; do wget -q -O $${FILE} $${URL} && chmod +x $${FILE}; done'
-      ExecStart=/usr/bin/systemd-notify --ready --status="succussfully downloaded kubernetes"
   # @TODO - switching the auto-update for now, doesnt work well in a ASG
   - name: install-kmsctl.service
     command: start
@@ -193,26 +175,24 @@ coreos:
       Description=Kubernetes Kubelet
       Documentation=https://github.com/GoogleCloudPlatform/kubernetes
       Requires=docker.service
-      Requires=install-kubernetes.service
+      Requires=install-kmsctl.service
       After=docker.service
-      After=install-kubernetes.service
+      After=install-kmsctl.service
 
       [Service]
       Restart=always
       RestartSec=10
       RuntimeDirectory=kubelet
       RuntimeDirectoryMode=0700
-      Environment="PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/bin"
-      EnvironmentFile=/etc/s3secrets
+      EnvironmentFile=/etc/kmsctl
       EnvironmentFile=/etc/environment
-      EnvironmentFile=/etc/secure_elb
       EnvironmentFile=/etc/aws-environment
 
-      ExecStartPre=/opt/bin/s3secrets s3 get -d=%t/kubelet compute/kubeconfig_kubelet
-      ExecStart=/opt/bin/hyperkube kubelet \
+      ExecStartPre=/opt/bin/kmsctl s3 get -d=%t/kubelet compute/kubeconfig_kubelet compute/kubeconfig_proxy
+      ExecStart=/usr/lib/coreos/kubelet-wrapper \
         --cloud-provider=aws \
         --address=0.0.0.0 \
-        --api-servers=$${KUBEAPI_MASTER} \
+        --api-servers=${kube_elb_dns_name} \
         --kubeconfig=%t/kubelet/kubeconfig_kubelet \
         --cluster-dns=10.200.0.10 \
         --cluster-domain=cluster.local \
@@ -224,31 +204,6 @@ coreos:
         --image-gc-low-threshold=40 \
         --cpu-cfs-quota=true \
         --logtostderr=true
-- name: kube-proxy.service
-  command: start
-  content: |
-    [Unit]
-    Description=Kubernetes Proxy
-    Documentation=https://github.com/GoogleCloudPlatform/kubernetes
-    Requires=install-kubernetes.service
-    After=install-kubernetes.service
-
-    [Service]
-    Restart=always
-    RestartSec=10
-    LimitNOFILE=10240
-    RuntimeDirectory=kube-proxy
-    RuntimeDirectoryMode=0700
-    EnvironmentFile=/etc/s3secrets
-    EnvironmentFile=/etc/aws-environment
-    EnvironmentFile=/etc/secure_elb
-
-    ExecStartPre=/opt/bin/s3secrets s3 get -d=%t/kube-proxy compute/kubeconfig_proxy
-    ExecStart=/opt/bin/hyperkube proxy \
-      --master=$${KUBEAPI_MASTER} \
-      --kubeconfig=%t/kube-proxy/kubeconfig_proxy \
-      --proxy-mode=iptables \
-      --logtostderr=true
 write_files:
 - path: /etc/sysctl.d/10-disable-ipv6.conf
   permissions: 0644
@@ -265,10 +220,6 @@ write_files:
     :OUTPUT ACCEPT [0:0]
     COMMIT
 
-- path: /etc/secure_elb
-  permissions: 0444
-  content: |
-    KUBEAPI_MASTER=https://${kube_elb_dns_name}
 - path: /etc/kmsctl
   content: |
     AWS_S3_BUCKET=${secrets_bucket_name}

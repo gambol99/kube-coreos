@@ -47,7 +47,7 @@ make_csr() {
 EOF
 }
 
-certificates() {
+create_certificates() {
   # step: generate the csr for the platform
   make_csr "etcd"  "\"*.${AWS_DEFAULT_REGION}.compute.internal\"" > ${ETCD_CSR}
   make_csr "kubeapi" "\"kubeapi.${CONFIG_DNS_ZONE_NAME}\"" > ${KUBEAPI_CSR}
@@ -94,11 +94,11 @@ users:
 EOF
 }
 
-kube_configs() {
+create_kubernetes_configs() {
   [ -e ${TOKENS_CSV} ] || touch ${TOKENS_CSV}
   for _username in admin controller scheduler kubelet proxy; do
     if ! grep -q "^${_username}" ${TOKENS_CSV}; then
-      token="$(genpass 24)"
+      token="$(generate_password 24)"
       userid="$(uuidgen)"
       echo "${token},${_username},${userid}" >> ${TOKENS_CSV}
       make_kubeconfig "${_username}" "${token}" "${userid}"
@@ -106,13 +106,13 @@ kube_configs() {
   done
   # step: move the kube config to compute
   mv ${SECRETS_DIR}/secure/kubeconfig_{kubelet,proxy} ${SECRETS_DIR}/compute
-  
+
   # step: copy the admin kubeconfig to $HOME
   mkdir -p ${HOME}/.kube
   [ -L "${PWD}/${SECRETS_DIR}/kubeconfig_admin" ] || ln -sf ${PWD}/${SECRETS_DIR}/kubeconfig_admin ${HOME}/.kube/config
 }
 
-kube_auth_policy() {
+create_kubernetes_auth_policy() {
   if [ ! -f "${KUBEAPI_AUTH}" ]; then
     annonce "Generating the Kubernetes authentication policy"
     cat <<EOF > ${KUBEAPI_AUTH}
@@ -127,6 +127,6 @@ EOF
   fi
 }
 
-certificates
-kube_configs
-kube_auth_policy
+create_certificates
+create_kubernetes_configs
+create_kubernetes_auth_policy

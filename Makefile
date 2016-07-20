@@ -7,7 +7,7 @@
 default: docker
 
 build:
-	@sudo docker ps
+	docker ps
 
 docker:
-	@sudo docker build -t docker.io/gambol99/kube-coreos .
+	docker build -t docker.io/gambol99/kube-coreos .

@@ -34,13 +34,21 @@ variable "etcd_discovery_md5" {
   description = "The md5 of the etcd-discovery binary"
   default     = "bd8e7d30a365efee56a52666b016b75c"
 }
-variable "kubernetes_release_url" {
-  description = "The Kubernetes url to deploy in the cluster"
-  default     = "https://storage.googleapis.com/kubernetes-release/release/v1.2.4/bin/linux/amd64/hyperkube"
+variable "kubernetes_image" {
+  description = "The docker kubernetes image we are using"
+  default     = "quay.io/coreos/hyperkube"
 }
-variable "kubernetes_release_md5" {
-  description = "The Kubernetes release md5"
-  default     = "3b26f0e01bd8b96c8c91cfeddb58e69b"
+variable "kubernetes_version" {
+  description = "The version / tag version of the kubernetes release"
+  default     = "v1.3.0_coreos.1"
+}
+variable "kubernetes_service_range" {
+  description = "The CIDR of the kubernetes service address space"
+  default     = "10.200.0.0/16"
+}
+variable "kubernetes_dns_service_address" {
+  description = "The Kube DNS service address, must be within the service range"
+  default     = "10.200.0.10"
 }
 variable "ssh_access_list" {
   description = "A comma separated list of ip addresses to permit external ssh access"
@@ -199,9 +207,9 @@ variable "secure_asg_grace_period" {
 #
 variable "kmsctl_release_md5" {
   description = "The md5 of the kmsctl release we are using"
-  default     = "29ddd235688ee07f94d2e2fcdb086a10"
+  default     = "0a09bc94f065d32f11797ec2390f589e"
 }
 variable "kmsctl_release_url" {
   description = "The url for the kmsctl release we are using"
-  default     = "https://github.com/gambol99/kmsctl/releases/download/v0.1.0/kmsctl_v0.1.0_linux_x86_64.gz"
+  default     = "https://github.com/gambol99/kmsctl/releases/download/v0.2.0/kmsctl_v0.2.0_linux_x86_64.gz"
 }

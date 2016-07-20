@@ -12,8 +12,8 @@ failed() {
   echo "[failed] $@" && exit 1
 }
 
-genpass() {
-  echo $(tr -dc 'a-zA-Z0-9' < /dev/urandom | head -c ${1:-8})
+generate_password() {
+  echo $(tr -dc 'a-zA-Z0-9' < /dev/urandom | head -c ${1:-24})
 }
 
 terraform_get_config() {

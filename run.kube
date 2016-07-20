@@ -31,7 +31,6 @@ run() {
     -v ${PWD}/ca:${WORKDIR}/ca \
     -v ${PWD}/kube:${WORKDIR}/kubernetes \
     -v ${PWD}/terraform:${WORKDIR}/terraform \
-    -v ${PWD}/units:${WORKDIR}/units \
     -v ${PWD}/scripts:${WORKDIR}/scripts \
     ${KUBE_IMAGE}:${KUBE_TAG}
 }
