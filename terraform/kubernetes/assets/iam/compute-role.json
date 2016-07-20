@@ -12,6 +12,8 @@
         "ec2:DescribeRouteTables",
         "ec2:CreateRoute",
         "ec2:DeleteRoute",
+        "ec2:AttachVolume",
+        "ec2:DetachVolume",
         "ec2:ModifyInstanceAttribute",
         "autoscaling:Describe*",
         "elasticloadbalancing:DescribeLoadBalancers"
