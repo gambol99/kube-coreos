@@ -84,7 +84,7 @@ coreos:
         RuntimeDirectory=etcd2
         RuntimeDirectoryMode=0700
         EnvironmentFile=/etc/kmsctl
-        ExecStartPre=/opt/bin/kmsctl get -d=%t/etcd2 common/etcd.pem common/etcd-key.pem
+        ExecStartPre=/opt/bin/kmsctl get --output-dir=%t/etcd2 common/etcd.pem common/etcd-key.pem
     - name: 30-etcd_peers.conf
       content: |
         [Service]
@@ -129,7 +129,7 @@ coreos:
       RemainAfterExit=yes
       TimeoutStartSec=300
       ExecStartPre=/usr/bin/mkdir -p /etc/ssl/etcd
-      ExecStartPre=/opt/bin/kmsctl get -d=/etc/ssl/certs common/ca.pem
+      ExecStartPre=/o pt/bin/kmsctl get --output-dir=/etc/ssl/certs common/ca.pem
       ExecStartPre=/usr/bin/cp -f /etc/ssl/certs/ca.pem /etc/ssl/etcd/ca.pem
       ExecStartPre=/usr/sbin/update-ca-certificates
       ExecStart=/usr/bin/systemd-notify --ready --status="succussfully updated the ca root certificates"
@@ -153,12 +153,14 @@ coreos:
       RestartSec=10
       RuntimeDirectory=kubelet
       RuntimeDirectoryMode=0700
+      Environment=KUBELET_VERSION=${kubernetes_version}
+      Environment=KUBELET_ACI=${kubernetes_image}
       EnvironmentFile=/etc/kmsctl
       EnvironmentFile=/etc/environment
       EnvironmentFile=/etc/aws-environment
 
       ExecStartPre=/bin/mkdir -p /srv/kubernetes/manifests
-      ExecStartPre=/opt/bin/kmsctl get -d=%t/kubelet --recursive=true secure/
+      ExecStartPre=/opt/bin/kmsctl get --output-dir=%t/kubelet --recursive=true secure/
       ExecStart=/usr/lib/coreos/kubelet-wrapper \
         --address=0.0.0.0 \
         --hostname-override=$${COREOS_PRIVATE_IPV4} \
@@ -167,7 +169,7 @@ coreos:
         --config=/srv/kubernetes/manifests \
         --logtostderr=true
 write_files:
-- path: /srv/kubernetes/manifests/sync-kube-files.service
+- path: /srv/kubernetes/manifests/sync-kubefiles.service
   permissions: 0444
   owner: root
   content: |
@@ -179,7 +181,7 @@ write_files:
     spec:
       hostNetwork: true
       containers:
-      - name: sync-manifests
+      - name: sync
         image: quay.io/gambol99/kmsctl:v0.2.0
         command:
         - --region=${aws_region}
@@ -187,7 +189,8 @@ write_files:
         - --bucket ${secrets_bucket_name}
         - --sync=true
         - --output-dir=/srv/kubernetes/manifests
-        - manifests/
+        - --recursive=true
+        - manifests/secure
         volumeMounts:
         - name: manifests
           mountPath: /srv/kubernetes/manifests

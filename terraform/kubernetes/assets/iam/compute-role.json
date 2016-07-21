@@ -19,7 +19,7 @@
         "elasticloadbalancing:DescribeLoadBalancers"
       ]
     },{
-      "Resource": "arn:aws:kms:${aws_region}:*:key/${kms_master_id}",
+      "Resource": "arn:aws:kms:${aws_region}:${aws_account}:key/${kms_master_id}",
       "Effect": "Allow",
       "Action" : [
         "kms:Decrypt"
@@ -32,6 +32,12 @@
       ]
     },{
       "Resource": "arn:aws:s3:::${secrets_bucket_name}/common/*",
+      "Effect": "Allow",
+      "Action": [
+        "s3:Get*"
+      ]
+    },{
+      "Resource": "arn:aws:s3:::${secrets_bucket_name}/manifests/compute/*",
       "Effect": "Allow",
       "Action": [
         "s3:Get*"

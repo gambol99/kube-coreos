@@ -25,11 +25,10 @@ CERTIFICATE_SIZE=${CERTIFICATE_SIZE:-"2048"}
 
 make_csr() {
   _OU="$1"
-  _DOMAINS="$2"
   cat <<EOF
 {
   "CN": "${CONFIG_DNS_ZONE_NAME}",
-  "hosts": [ "localhost", "127.0.0.1", ${_DOMAINS} ],
+  "hosts": [ "localhost" ],
   "key": {
     "algo": "${CERTIFICATE_ALGO}",
     "size": ${CERTIFICATE_SIZE}
@@ -49,26 +48,26 @@ EOF
 
 create_certificates() {
   # step: generate the csr for the platform
-  make_csr "etcd"  "\"*.${AWS_DEFAULT_REGION}.compute.internal\"" > ${ETCD_CSR}
-  make_csr "kubeapi" "\"kubeapi.${CONFIG_DNS_ZONE_NAME}\"" > ${KUBEAPI_CSR}
+  make_csr "etcd"    > ${ETCD_CSR}
+  make_csr "kubeapi" > ${KUBEAPI_CSR}
 
   # step: generate the certificates if required
   annonce "Generating the certificates for the platform"
-  if [ ! -f "${PLATFORM_CA}" ]; then
+  if [[ ! -f "${PLATFORM_CA}" ]]; then
     annonce "Generating the Platform CA"
     cfssl gencert -initca ca/ca-csr.json | cfssljson -bare ${SECRETS_DIR}/common/ca >/dev/null || failed "unable to generate the ca"
     mv ${SECRETS_DIR}/common/ca-key.pem ${PLATFORM_CA_KEY}
   fi
 
-  if [ ! -f "${ETCD_CERT}" ]; then
+  if [[ ! -f "${ETCD_CERT}" ]]; then
     annonce "Generating the Etcd certificates"
-    cfssl gencert -ca=${PLATFORM_CA} -ca-key=${PLATFORM_CA_KEY} \
+    cfssl gencert -ca=${PLATFORM_CA} -ca-key=${PLATFORM_CA_KEY} -hostname=localhost,127.0.0.1,*.${AWS_DEFAULT_REGION}.compute.internal \
       -config=ca/ca-config.json -profile=server ${ETCD_CSR} | cfssljson -bare ${SECRETS_DIR}/common/etcd >/dev/null || failed "unable to generate the etcd certificate"
   fi
 
-  if [ ! -f "${KUBEAPI_CERT}" ]; then
+  if [[ ! -f "${KUBEAPI_CERT}" ]]; then
     annonce "Generating the KubeAPI certificates"
-    cfssl gencert -ca=${PLATFORM_CA} -ca-key=${PLATFORM_CA_KEY} \
+    cfssl gencert -ca=${PLATFORM_CA} -ca-key=${PLATFORM_CA_KEY} -hostname=localhost,127.0.0.1,kube.${CONFIG_DNS_ZONE_NAME},secure.${CONFIG_DNS_ZONE_NAME} \
       -config=ca/ca-config.json -profile=server ${KUBEAPI_CSR} | cfssljson -bare ${SECRETS_DIR}/secure/kubeapi >/dev/null || failed "unable to generate the kubeapi certificate"
   fi
 }
@@ -95,7 +94,7 @@ EOF
 }
 
 create_kubernetes_configs() {
-  [ -e ${TOKENS_CSV} ] || touch ${TOKENS_CSV}
+  [[ -e ${TOKENS_CSV} ]] || touch ${TOKENS_CSV}
   for _username in admin controller scheduler kubelet proxy; do
     if ! grep -q "^${_username}" ${TOKENS_CSV}; then
       token="$(generate_password 24)"
@@ -109,11 +108,11 @@ create_kubernetes_configs() {
 
   # step: copy the admin kubeconfig to $HOME
   mkdir -p ${HOME}/.kube
-  [ -L "${PWD}/${SECRETS_DIR}/kubeconfig_admin" ] || ln -sf ${PWD}/${SECRETS_DIR}/kubeconfig_admin ${HOME}/.kube/config
+  [[ -L "${PWD}/${SECRETS_DIR}/kubeconfig_admin" ]] || ln -sf ${PWD}/${SECRETS_DIR}/kubeconfig_admin ${HOME}/.kube/config
 }
 
 create_kubernetes_auth_policy() {
-  if [ ! -f "${KUBEAPI_AUTH}" ]; then
+  if [[ ! -f "${KUBEAPI_AUTH}" ]]; then
     annonce "Generating the Kubernetes authentication policy"
     cat <<EOF > ${KUBEAPI_AUTH}
 { "apiVersion": "abac.authorization.kubernetes.io/v1beta1", "kind": "Policy", "spec": { "user":"*", "nonResourcePath": "*", "readonly": true}}

@@ -4,6 +4,7 @@
 resource "template_file" "compute_policy" {
   template = "${file(\"kubernetes/assets/iam/compute-role.json\")}"
   vars = {
+    aws_account         = "${var.aws_account}"
     aws_region          = "${var.aws_region}"
     environment         = "${var.environment}"
     kms_master_id       = "${var.kms_master_id}"
@@ -45,9 +46,9 @@ resource "template_file" "compute_user_data" {
     etcd_discovery_md5       = "${var.etcd_discovery_md5}"
     etcd_discovery_url       = "${var.etcd_discovery_url}"
     flannel_cidr             = "${var.flannel_cidr}"
-    kube_elb_dns_name        = "${aws_elb.kube.dns_name}"
-    kubernetes_release_md5   = "${var.kubernetes_release_md5}"
-    kubernetes_release_url   = "${var.kubernetes_release_url}"
+    kube_elb_dns_name        = "kube.${var.dns_zone_name}"
+    kubernetes_image         = "${var.kubernetes_image}"
+    kubernetes_version       = "${var.kubernetes_version}"
     platform                 = "${var.platform}"
     kmsctl_release_md5       = "${var.kmsctl_release_md5}"
     kmsctl_release_url       = "${var.kmsctl_release_url}"
@@ -60,8 +61,7 @@ resource "template_file" "compute_user_data" {
 ## Compute Launch Configuration
 #
 resource "aws_launch_configuration" "compute" {
-  associate_public_ip_address = false
-  depends_on                  = ["template_file.compute_user_data" ]
+  associate_public_ip_address = true
   enable_monitoring           = false
   iam_instance_profile        = "${aws_iam_instance_profile.compute.name}"
   image_id                    = "${var.coreos_image}"
@@ -93,7 +93,6 @@ resource "aws_launch_configuration" "compute" {
 ## Compute AutoScaling Group
 #
 resource "aws_autoscaling_group" "compute" {
-  depends_on                = [ "aws_autoscaling_group.secure" ]
   default_cooldown          = "${var.compute_asg_grace_period}"
   force_delete              = true
   health_check_grace_period = 10
