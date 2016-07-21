@@ -12,6 +12,10 @@ failed() {
   echo "[failed] $@" && exit 1
 }
 
+error() {
+  echo "[error] $@"
+}
+
 generate_password() {
   echo $(tr -dc 'a-zA-Z0-9' < /dev/urandom | head -c ${1:-24})
 }
@@ -31,6 +35,7 @@ export CONFIG_DNS_ZONE_NAME=$(terraform_get_config "dns_zone_name")
 export CONFIG_ENVIRONMENT=$(terraform_get_config "environment")
 export CONFIG_SECRET_BUCKET_NAME=$(terraform_get_config "secrets_bucket_name")
 export CONFIG_TERRAFORM_S3_BUCKET=$(terraform_get_config "terraform_bucket_name")
+export CONFIG_AWS_ACCOUNT=$(terraform_get_config "aws_account")
 export CONFIG_AWS_ACCESS_KEY=$(terraform_get_config "aws_access_key")
 export CONFIG_AWS_SECRET_KEY=$(terraform_get_config "aws_secret_key")
 export CONFIG_AWS_REGION=$(terraform_get_config "aws_region")
@@ -40,7 +45,7 @@ export CONFIG_AWS_REGION=$(terraform_get_config "aws_region")
 export SECRETS_DIR="secrets"
 export FLEETCTL=${FLEETCTL:-"/usr/bin/fleetctl"}
 export FLEETCTL_ENDPOINT=${FLEETCTL_ENDPOINT:-"https://127.0.0.1:2379"}
-export KEYPAIR_NAME="${SECRETS_DIR}/${PLATFORM_ENV}"
+export KEYPAIR_NAME="${SECRETS_DIR}/locked/${PLATFORM_ENV}"
 export KEYPAIR_PUBLIC="${KEYPAIR_NAME}.pem"
 export KEYPAIR_PRIVATE="${KEYPAIR_NAME}"
 export TERRAFORM=${TERRAFORM:-/opt/terraform/terraform}
@@ -51,6 +56,7 @@ export AWS_ACCESS_KEY_ID=${CONFIG_AWS_ACCESS_KEY}
 export AWS_SECRET_ACCESS_KEY=${CONFIG_AWS_SECRET_KEY}
 export AWS_DEFAULT_REGION=${CONFIG_AWS_REGION}
 export AWS_BUCKET=${CONFIG_SECRET_BUCKET_NAME}
+export AWS_S3_BUCKET=${CONFIG_SECRET_BUCKET_NAME}
 export AWS_KMS_ID=${CONFIG_AWS_KMS_ID}
 
 # step: ensure the aws credentials are set

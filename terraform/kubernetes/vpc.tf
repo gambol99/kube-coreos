@@ -64,21 +64,3 @@ resource "aws_route_table" "default" {
     Role = "default-routes"
   }
 }
-
-#
-## EIP for NAT Gateway in Compute Subnets
-#
-resource "aws_eip" "nat" {
-  count    = 3
-  vpc      = true
-}
-
-#
-## NAT Gateway for Compute Subnets
-#
-resource "aws_nat_gateway" "nat" {
-  count         = 3
-  allocation_id = "${element(aws_eip.nat.*.id, count.index)}"
-  depends_on    = [ "aws_internet_gateway.default" ]
-  subnet_id     = "${element(aws_subnet.public_subnets.*.id, count.index)}"
-}

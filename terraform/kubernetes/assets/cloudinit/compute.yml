@@ -103,7 +103,7 @@ coreos:
         RuntimeDirectory=etcd2
         RuntimeDirectoryMode=0700
         EnvironmentFile=/etc/kmsctl
-        ExecStartPre=/opt/bin/kmsctl get -d=%t/etcd2 common/etcd.pem common/etcd-key.pem
+        ExecStartPre=/opt/bin/kmsctl get --output-dir=%t/etcd2 common/etcd.pem common/etcd-key.pem
     - name: 30-etcd_peers.conf
       content: |
         [Service]
@@ -160,7 +160,7 @@ coreos:
       RemainAfterExit=yes
       TimeoutStartSec=300
       ExecStartPre=/usr/bin/mkdir -p /etc/ssl/etcd
-      ExecStartPre=/opt/bin/kmsctl s3 get -d=/etc/ssl/certs common/ca.pem
+      ExecStartPre=/opt/bin/kmsctl s3 get --output-dir=/etc/ssl/certs common/ca.pem
       ExecStartPre=/usr/bin/cp -f /etc/ssl/certs/ca.pem /etc/ssl/etcd/ca.pem
       ExecStartPre=/usr/sbin/update-ca-certificates
       ExecStart=/usr/bin/systemd-notify --ready --status="succussfully updated the ca root certificates"
@@ -174,9 +174,7 @@ coreos:
       [Unit]
       Description=Kubernetes Kubelet
       Documentation=https://github.com/GoogleCloudPlatform/kubernetes
-      Requires=docker.service
       Requires=install-kmsctl.service
-      After=docker.service
       After=install-kmsctl.service
 
       [Service]
@@ -184,11 +182,13 @@ coreos:
       RestartSec=10
       RuntimeDirectory=kubelet
       RuntimeDirectoryMode=0700
+      Environment=KUBELET_VERSION=${kubernetes_version}
+      Environment=KUBELET_ACI=${kubernetes_image}
       EnvironmentFile=/etc/kmsctl
       EnvironmentFile=/etc/environment
       EnvironmentFile=/etc/aws-environment
 
-      ExecStartPre=/opt/bin/kmsctl s3 get -d=%t/kubelet compute/kubeconfig_kubelet compute/kubeconfig_proxy
+      ExecStartPre=/opt/bin/kmsctl s3 get -output-dir-=%t/kubelet compute/kubeconfig_kubelet compute/kubeconfig_proxy
       ExecStart=/usr/lib/coreos/kubelet-wrapper \
         --cloud-provider=aws \
         --address=0.0.0.0 \

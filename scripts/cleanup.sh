@@ -13,9 +13,6 @@ if [[ $response =~ ^([yY][eE][sS]|[yY])$ ]]; then
     scripts/terraform.sh destroy -force=true -target="module.kube.template_file.compute_user_data"  || failed "unable to delete compute user data"
     annonce "Delete everything else"
     scripts/terraform.sh destroy -force=true || failed "unable to delete the entire stack"
-    rm -rf terraform/.terraform
-
     annonce "Deleting all the secrets"
-    rm -rf ${SECRETS_DIR}/
   )
 fi

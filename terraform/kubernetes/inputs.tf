@@ -12,6 +12,9 @@ variable "dns_zone_name" {
   description = "The route53 domain associated to the environment"
   default     = "dsp.io"
 }
+variable "aws_account" {
+  description = "The account id or alias, required for kubernetes manifests"
+}
 variable "kms_master_id" {
   description = "The AWS KMS id this environment is using"
 }
@@ -86,17 +89,6 @@ variable "compute_subnets" {
     "az0_cidr"  = "10.100.0.0/24"
     "az1_cidr"  = "10.100.1.0/24"
     "az2_cidr"  = "10.100.2.0/24"
-    "az0_zone"  = "eu-west-1a"
-    "az1_zone"  = "eu-west-1b"
-    "az2_zone"  = "eu-west-1c"
-  }
-}
-variable "public_subnets" {
-  description = "The public subnets hold the nat gateways and public elbs"
-  default = {
-    "az0_cidr"  = "10.100.100.0/24"
-    "az1_cidr"  = "10.100.101.0/24"
-    "az2_cidr"  = "10.100.102.0/24"
     "az0_zone"  = "eu-west-1a"
     "az1_zone"  = "eu-west-1b"
     "az2_zone"  = "eu-west-1c"

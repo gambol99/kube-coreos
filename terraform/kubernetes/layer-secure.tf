@@ -6,6 +6,7 @@ resource "template_file" "secure" {
   template = "${file(\"kubernetes/assets/iam/secure-role.json\")}"
 
   vars = {
+    aws_account         = "${var.aws_account}"
     aws_region          = "${var.aws_region}"
     environment         = "${var.environment}"
     kms_master_id       = "${var.kms_master_id}"
@@ -45,8 +46,8 @@ resource "template_file" "secure_user_data" {
     environment            = "${var.environment}"
     etcd_discovery_md5     = "${var.etcd_discovery_md5}"
     etcd_discovery_url     = "${var.etcd_discovery_url}"
-    kubernetes_release_md5 = "${var.kubernetes_release_md5}"
-    kubernetes_release_url = "${var.kubernetes_release_url}"
+    kubernetes_image       = "${var.kubernetes_image}"
+    kubernetes_version     = "${var.kubernetes_version}"
     platform               = "${var.platform}"
     kmsctl_release_md5     = "${var.kmsctl_release_md5}"
     kmsctl_release_url     = "${var.kmsctl_release_url}"
@@ -59,7 +60,6 @@ resource "template_file" "secure_user_data" {
 #
 resource "aws_launch_configuration" "secure" {
   associate_public_ip_address = true
-  depends_on                  = [ "template_file.secure_user_data", "aws_nat_gateway.nat" ]
   enable_monitoring           = false
   iam_instance_profile        = "${aws_iam_instance_profile.secure.name}"
   image_id                    = "${var.coreos_image}"

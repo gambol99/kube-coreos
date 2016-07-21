@@ -6,8 +6,8 @@ source scripts/environment.sh || exit 1
 
 command="$1"
 
-if [ -n "${TERRAFORM_BUCKET}" ]; then
-  if [ ! -f "terraform/.terraform/terraform.tfstate" ]; then
+if [[ -n "${TERRAFORM_BUCKET}" ]]; then
+  if [[ ! -f "terraform/.terraform/terraform.tfstate" ]]; then
     annonce "Setting the remote terraform config"
     (
       cd terraform
@@ -32,7 +32,7 @@ case "$1" in
     (
       cd terraform && $TERRAFORM get >/dev/null &&
       $TERRAFORM ${command} ${TERRAFORM_OPTIONS} ${TERRAFORM_VAR_FILES} $@
-    ) || failed "unable to perform terraform operation"
+    ) || error "unable to perform terraform operation"
     ;;
   plan)
     shift
@@ -54,7 +54,7 @@ case "$1" in
     ;;
 esac
 
-if [ -n "${TERRAFORM_BUCKET}" ]; then
+if [[ -n "${TERRAFORM_BUCKET}" ]]; then
   annonce "Pushing the terraform state to remote site"
   (
     cd terraform

@@ -14,6 +14,7 @@ fi
 
 annonce "Copying the private key into the SSH"
 cp ${KEYPAIR_PRIVATE} ${HOME}/.ssh/id_rsa
+chmod 0400 ${HOME}/.ssh/id_rsa 
 
 if [ ! -f "${HOME}/.ssh/config" ]; then
   cat <<EOF > ${HOME}/.ssh/config
