@@ -30,9 +30,20 @@ resource "aws_s3_bucket_object" "kube_scheduler" {
   kms_key_id = "arn:aws:kms:${var.aws_region}:${var.aws_account}:key/${var.kms_master_id}"
 }
 
-resource "aws_s3_bucket_object" "kube_dns" {
-  key        = "manifests/secure/kube-dns.yml"
+#
+## Kuberneres Addon Components
+#
+
+resource "aws_s3_bucket_object" "kube_dns_deployment" {
+  key        = "manifests/addons/kube-dns.yml"
   bucket     = "${aws_s3_bucket.secrets.bucket}"
-  source     = "kubernetes/assets/manifests/kube-dns.yml"
+  source     = "kubernetes/assets/manifests/addons/kube-dns.yml"
+  kms_key_id = "arn:aws:kms:${var.aws_region}:${var.aws_account}:key/${var.kms_master_id}"
+}
+
+resource "aws_s3_bucket_object" "kube_dns_service" {
+  key        = "manifests/addons/kube-dns-service.yml"
+  bucket     = "${aws_s3_bucket.secrets.bucket}"
+  source     = "kubernetes/assets/manifests/addons/kube-dns-service.yml"
   kms_key_id = "arn:aws:kms:${var.aws_region}:${var.aws_account}:key/${var.kms_master_id}"
 }

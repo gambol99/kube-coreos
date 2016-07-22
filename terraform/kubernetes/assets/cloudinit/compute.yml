@@ -188,13 +188,17 @@ coreos:
       EnvironmentFile=/etc/environment
       EnvironmentFile=/etc/aws-environment
 
-      ExecStartPre=/opt/bin/kmsctl s3 get -output-dir-=%t/kubelet compute/kubeconfig_kubelet compute/kubeconfig_proxy
+      ExecStartPre=/usr/bin/mkdir -p /etc/kubernetes/manifests
+      ExecStartPre=/opt/bin/kmsctl s3 get -output-dir=%t/kubelet compute/kubeconfig_kubelet compute/kubeconfig_proxy
+      ExecStartPre=/opt/bin/kmsctl s3 get -output-dir=/etc/kubernetes/manifests --recursive=true manifests/addons
+
       ExecStart=/usr/lib/coreos/kubelet-wrapper \
         --cloud-provider=aws \
         --address=0.0.0.0 \
         --api-servers=${kube_elb_dns_name} \
         --kubeconfig=%t/kubelet/kubeconfig_kubelet \
-        --cluster-dns=10.200.0.10 \
+        --config=/etc/kubernetes/manifests \
+        --cluster-dns=${kubernetes_dns_service_address} \
         --cluster-domain=cluster.local \
         --image-gc-high-threshold=60 \
         --image-gc-low-threshold=40 \
