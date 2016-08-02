@@ -2,9 +2,7 @@
 #
 #  vim:ts=2:sw=2:et
 #
-if [[ "${DEBUG}" == "True" ]]; then
-  set -x
-fi
+[[ -n "${DEBUG}" ]] && set -x
 
 annonce() {
   [ -n "$1" ] && echo "[v] --> $@"
