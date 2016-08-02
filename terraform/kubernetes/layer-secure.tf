@@ -2,8 +2,8 @@
 #
 ## Secure Node Role Policy Template
 #
-resource "template_file" "secure" {
-  template = "${file(\"kubernetes/assets/iam/secure-role.json\")}"
+data "template_file" "secure" {
+  template = "${file("kubernetes/assets/iam/secure-role.json")}"
 
   vars = {
     aws_account         = "${var.aws_account}"
@@ -19,7 +19,7 @@ resource "template_file" "secure" {
 resource "aws_iam_role_policy" "secure" {
   name   = "${var.environment}-secure-role"
   role   = "${aws_iam_role.secure.id}"
-  policy = "${template_file.secure.rendered}"
+  policy = "${data.template_file.secure.rendered}"
 }
 
 #
@@ -33,12 +33,8 @@ resource "aws_iam_instance_profile" "secure" {
 #
 ## Secure Node UserData template
 #
-resource "template_file" "secure_user_data" {
-  template = "${file(\"kubernetes/assets/cloudinit/secure.yml\")}"
-
-  lifecycle {
-    create_before_destroy = true
-  }
+data "template_file" "secure_user_data" {
+  template = "${file("kubernetes/assets/cloudinit/secure.yml")}"
 
   vars = {
     aws_region             = "${var.aws_region}"
@@ -67,7 +63,7 @@ resource "aws_launch_configuration" "secure" {
   key_name                    = "${aws_key_pair.default.id}"
   name_prefix                 = "${var.environment}-secure"
   security_groups             = [ "${aws_security_group.secure.id}" ]
-  user_data                   = "${template_file.secure_user_data.rendered}"
+  user_data                   = "${data.template_file.secure_user_data.rendered}"
 
   lifecycle {
     create_before_destroy = true

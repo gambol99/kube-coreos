@@ -14,7 +14,7 @@ provider "aws" {
 #
 resource "aws_key_pair" "default" {
   key_name = "${var.environment}-key"
-  public_key = "${file(\"../secrets/locked/${var.environment}.pub\")}"
+  public_key = "${file("../secrets/locked/${var.environment}.pub")}"
 }
 
 #

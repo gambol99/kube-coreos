@@ -11,8 +11,8 @@
 resource "aws_subnet" "compute_subnets" {
   count             = 3
   vpc_id            = "${aws_vpc.vpc.id}"
-  cidr_block        = "${lookup(var.compute_subnets, \"az${count.index}_cidr\")}"
-  availability_zone = "${lookup(var.compute_subnets, \"az${count.index}_zone\")}"
+  cidr_block        = "${lookup(var.compute_subnets, "az${count.index}_cidr")}"
+  availability_zone = "${lookup(var.compute_subnets, "az${count.index}_zone")}"
 
   tags {
     Name = "${var.environment}-compute-az${count.index}"
@@ -36,8 +36,8 @@ resource "aws_route_table_association" "compute_routes" {
 resource "aws_subnet" "secure_subnets" {
   count             = 3
   vpc_id            = "${aws_vpc.vpc.id}"
-  cidr_block        = "${lookup(var.secure_subnets, \"az${count.index}_cidr\")}"
-  availability_zone = "${lookup(var.secure_subnets, \"az${count.index}_zone\")}"
+  cidr_block        = "${lookup(var.secure_subnets, "az${count.index}_cidr")}"
+  availability_zone = "${lookup(var.secure_subnets, "az${count.index}_zone")}"
 
   tags {
     Name = "${var.environment}-secure-az${count.index}"

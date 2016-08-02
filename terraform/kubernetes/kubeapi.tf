@@ -43,7 +43,7 @@ resource "aws_security_group_rule" "kubeapi_allow_443" {
   protocol                 = "tcp"
   from_port                = 443
   to_port                  = 443
-  cidr_blocks              = [ "${split(\",\", var.kubeapi_access_list)}" ]
+  cidr_blocks              = [ "${split(",", var.kubeapi_access_list)}" ]
 }
 
 #

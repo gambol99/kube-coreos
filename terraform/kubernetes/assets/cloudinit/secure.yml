@@ -109,6 +109,7 @@ coreos:
       Environment="FILEN=/opt/bin/kmsctl"
       Environment="MD5SUM=${kmsctl_release_md5}"
       ExecStartPre=/usr/bin/mkdir -p /opt/bin
+      ExecStartPre=-/usr/bin/rm -f /opt/bin/kmsctl /opt/bin/kmsctl.gz
       ExecStartPre=/usr/bin/bash -c 'until [[ -x $${FILEN} ]] && [[ $(md5sum $${FILEN} | cut -f1 -d" ") == $${MD5SUM} ]]; do wget -q -O $${FILEN}.gz $${URL} && gunzip $${FILEN}.gz && chmod +x $${FILEN}; done'
       ExecStart=/usr/bin/systemd-notify --ready --status="succussfully downloaded the kmsctl"
   - name: update-ca-certificates.service
@@ -129,7 +130,7 @@ coreos:
       RemainAfterExit=yes
       TimeoutStartSec=300
       ExecStartPre=/usr/bin/mkdir -p /etc/ssl/etcd
-      ExecStartPre=/o pt/bin/kmsctl get --output-dir=/etc/ssl/certs common/ca.pem
+      ExecStartPre=/opt/bin/kmsctl get --output-dir=/etc/ssl/certs common/ca.pem
       ExecStartPre=/usr/bin/cp -f /etc/ssl/certs/ca.pem /etc/ssl/etcd/ca.pem
       ExecStartPre=/usr/sbin/update-ca-certificates
       ExecStart=/usr/bin/systemd-notify --ready --status="succussfully updated the ca root certificates"
@@ -159,17 +160,17 @@ coreos:
       EnvironmentFile=/etc/environment
       EnvironmentFile=/etc/aws-environment
 
-      ExecStartPre=/bin/mkdir -p /srv/kubernetes/manifests
+      ExecStartPre=/bin/mkdir -p /etc/kubernetes/manifests
       ExecStartPre=/opt/bin/kmsctl get --output-dir=%t/kubelet --recursive=true secure/
       ExecStart=/usr/lib/coreos/kubelet-wrapper \
         --address=0.0.0.0 \
         --hostname-override=$${COREOS_PRIVATE_IPV4} \
         --allow-privileged=true \
         --host-network-sources=* \
-        --config=/srv/kubernetes/manifests \
+        --config=/etc/kubernetes/manifests \
         --logtostderr=true
 write_files:
-- path: /srv/kubernetes/manifests/sync-kubefiles.service
+- path: /etc/kubernetes/manifests/sync-kubefiles.service
   permissions: 0444
   owner: root
   content: |
@@ -188,16 +189,18 @@ write_files:
         - get
         - --bucket ${secrets_bucket_name}
         - --sync=true
-        - --output-dir=/srv/kubernetes/manifests
+        - --output-dir=/etc/kubernetes/manifests
         - --recursive=true
+        - --flatten=false
         - manifests/secure
+        - manifests/addons
         volumeMounts:
         - name: manifests
-          mountPath: /srv/kubernetes/manifests
+          mountPath: /etc/kubernetes/manifests
     volumes:
     - name: manifests
       hostPath:
-        path: /srv/kubernetes/manifests
+        path: /etc/kubernetes/manifests
 - path: /etc/sysctl.d/10-disable-ipv6.conf
   permissions: 0644
   owner: root

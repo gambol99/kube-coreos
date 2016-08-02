@@ -1,8 +1,8 @@
 #
 ## Compute Node IAM Policy Template
 #
-resource "template_file" "compute_policy" {
-  template = "${file(\"kubernetes/assets/iam/compute-role.json\")}"
+data "template_file" "compute_policy" {
+  template = "${file("kubernetes/assets/iam/compute-role.json")}"
   vars = {
     aws_account         = "${var.aws_account}"
     aws_region          = "${var.aws_region}"
@@ -18,7 +18,7 @@ resource "template_file" "compute_policy" {
 resource "aws_iam_role_policy" "compute_policy" {
   name   = "${var.environment}-compute-role"
   role   = "${aws_iam_role.compute.id}"
-  policy = "${template_file.compute_policy.rendered}"
+  policy = "${data.template_file.compute_policy.rendered}"
 }
 
 #
@@ -32,28 +32,25 @@ resource "aws_iam_instance_profile" "compute" {
 #
 ## Compute UserData Template
 #
-resource "template_file" "compute_user_data" {
-  template = "${file(\"kubernetes/assets/cloudinit/compute.yml\")}"
-
-  lifecycle {
-    create_before_destroy = true
-  }
+data "template_file" "compute_user_data" {
+  template = "${file("kubernetes/assets/cloudinit/compute.yml")}"
 
   vars = {
-    aws_region               = "${var.aws_region}"
-    dns_zone_name            = "${var.dns_zone_name}"
-    environment              = "${var.environment}"
-    etcd_discovery_md5       = "${var.etcd_discovery_md5}"
-    etcd_discovery_url       = "${var.etcd_discovery_url}"
-    flannel_cidr             = "${var.flannel_cidr}"
-    kube_elb_dns_name        = "kube.${var.dns_zone_name}"
-    kubernetes_image         = "${var.kubernetes_image}"
-    kubernetes_version       = "${var.kubernetes_version}"
-    platform                 = "${var.platform}"
-    kmsctl_release_md5       = "${var.kmsctl_release_md5}"
-    kmsctl_release_url       = "${var.kmsctl_release_url}"
-    secrets_bucket_name      = "${var.secrets_bucket_name}"
-    secure_asg_name          = "${var.environment}-secure-asg"
+    aws_region                     = "${var.aws_region}"
+    dns_zone_name                  = "${var.dns_zone_name}"
+    environment                    = "${var.environment}"
+    etcd_discovery_md5             = "${var.etcd_discovery_md5}"
+    etcd_discovery_url             = "${var.etcd_discovery_url}"
+    flannel_cidr                   = "${var.flannel_cidr}"
+    kmsctl_release_md5             = "${var.kmsctl_release_md5}"
+    kmsctl_release_url             = "${var.kmsctl_release_url}"
+    kube_elb_dns_name              = "kube.${var.dns_zone_name}"
+    kubernetes_dns_service_address = "${var.kubernetes_dns_service_address}"
+    kubernetes_image               = "${var.kubernetes_image}"
+    kubernetes_version             = "${var.kubernetes_version}"
+    platform                       = "${var.platform}"
+    secrets_bucket_name            = "${var.secrets_bucket_name}"
+    secure_asg_name                = "${var.environment}-secure-asg"
   }
 }
 
@@ -69,7 +66,7 @@ resource "aws_launch_configuration" "compute" {
   key_name                    = "${aws_key_pair.default.id}"
   name_prefix                 = "${var.environment}-compute_"
   security_groups             = [ "${aws_security_group.compute.id}" ]
-  user_data                   = "${template_file.compute_user_data.rendered}"
+  user_data                   = "${data.template_file.compute_user_data.rendered}"
 
   lifecycle {
     create_before_destroy = true

@@ -199,7 +199,7 @@ variable "secure_asg_grace_period" {
 #
 variable "kmsctl_release_md5" {
   description = "The md5 of the kmsctl release we are using"
-  default     = "0a09bc94f065d32f11797ec2390f589e"
+  default     = "b5a340e883107dcde8cf6f00f0771d55"
 }
 variable "kmsctl_release_url" {
   description = "The url for the kmsctl release we are using"

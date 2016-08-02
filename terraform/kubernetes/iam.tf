@@ -8,7 +8,7 @@
 resource "aws_iam_role" "compute" {
   name               = "${var.environment}-compute-role"
   path               = "/"
-  assume_role_policy = "${file(\"kubernetes/assets/iam/assume-role.json\")}"
+  assume_role_policy = "${file("kubernetes/assets/iam/assume-role.json")}"
 }
 
 #
@@ -17,7 +17,7 @@ resource "aws_iam_role" "compute" {
 resource "aws_iam_role" "kube" {
   name               = "${var.environment}-kube-role"
   path               = "/"
-  assume_role_policy = "${file(\"kubernetes/assets/iam/assume-role.json\")}"
+  assume_role_policy = "${file("kubernetes/assets/iam/assume-role.json")}"
 }
 
 #
@@ -26,5 +26,5 @@ resource "aws_iam_role" "kube" {
 resource "aws_iam_role" "secure" {
   name               = "${var.environment}-etcd-role"
   path               = "/"
-  assume_role_policy = "${file(\"kubernetes/assets/iam/assume-role.json\")}"
+  assume_role_policy = "${file("kubernetes/assets/iam/assume-role.json")}"
 }
