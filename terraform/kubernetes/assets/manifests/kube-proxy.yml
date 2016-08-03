@@ -12,6 +12,8 @@ spec:
     - /hyperkube
     - proxy
     - --master=https://${kube_elb_dns_name}
+    - --cloud-provider=aws
+    - --cloud-config=/etc/cloud.cfg
     - --kubeconfig=/etc/secrets/kubeconfig_proxy
     - --proxy-mode=iptables
     - --logtostderr=true

@@ -2,7 +2,7 @@
 #
 #  vim:ts=2:sw=2:et
 #
-[ -n "${DEBUG}" ] && set -x
+[[ -n "${DEBUG}" ]] && set -x
 
 annonce() {
   [ -n "$1" ] && echo "[v] --> $@"
@@ -51,7 +51,7 @@ export KEYPAIR_PRIVATE="${KEYPAIR_NAME}"
 export TERRAFORM=${TERRAFORM:-/opt/terraform/terraform}
 export TERRAFORM_VAR_FILES="-var-file=../${ENVIRONMENT_FILE}"
 export TERRAFORM_BUCKET=${CONFIG_TERRAFORM_S3_BUCKET:-""}
-export TERRAFORM_OPTIONS=${CONFIG_TERRAFORM_OPTIONS:-"-parallelism=20 -backup=-"}
+export TERRAFORM_OPTIONS=${CONFIG_TERRAFORM_OPTIONS:-"-parallelism=20"}
 export AWS_ACCESS_KEY_ID=${CONFIG_AWS_ACCESS_KEY}
 export AWS_SECRET_ACCESS_KEY=${CONFIG_AWS_SECRET_KEY}
 export AWS_DEFAULT_REGION=${CONFIG_AWS_REGION}
@@ -71,10 +71,6 @@ while IFS='=' read NAME VALUE; do
   export TF_VAR_${TF_NAME}="${TF_VALUE}"
 done < <(set | grep ^CONFIG_)
 
-export COMMON_FILES="ca.pem etcd-key.pem etcd.pem"
-export COMPUTE_FILES="kubeconfig_kubelet kubeconfig_proxy"
-export LOCKED_FILES="ca-key.pem ca.csr dev dev.pub etcd-csr.json etcd.csr"
-export SECURE_FILES="auth-policy.json kubeapi-key.pem kubeapi.csr kubeapi.pem kubeconfig_admin kubeconfig_controller kubeconfig_scheduler tokens.csv"
 export ENVIRONMENT_SET=1
 
 mkdir -p ${SECRETS_DIR}

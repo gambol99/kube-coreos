@@ -116,12 +116,14 @@ create_kubernetes_auth_policy() {
     annonce "Generating the Kubernetes authentication policy"
     cat <<EOF > ${KUBEAPI_AUTH}
 { "apiVersion": "abac.authorization.kubernetes.io/v1beta1", "kind": "Policy", "spec": { "user":"*", "nonResourcePath": "*", "readonly": true}}
+{ "apiVersion": "abac.authorization.kubernetes.io/v1beta1", "kind": "Policy", "spec": { "user":"*", "nonResourcePath": "*", "readonly": true}}
 { "apiVersion": "abac.authorization.kubernetes.io/v1beta1", "kind": "Policy", "spec": { "user":"admin", "namespace": "*", "resource": "*", "apiGroup": "*" }}
 { "apiVersion": "abac.authorization.kubernetes.io/v1beta1", "kind": "Policy", "spec": { "user":"controller-manager", "namespace": "*", "resource": "*", "apiGroup": "*" }}
 { "apiVersion": "abac.authorization.kubernetes.io/v1beta1", "kind": "Policy", "spec": { "user":"scheduler", "namespace": "*", "resource": "*", "apiGroup": "*" }}
 { "apiVersion": "abac.authorization.kubernetes.io/v1beta1", "kind": "Policy", "spec": { "user":"kubelet", "namespace": "*", "resource": "*" }}
 { "apiVersion": "abac.authorization.kubernetes.io/v1beta1", "kind": "Policy", "spec": { "user":"proxy", "namespace": "*", "resource": "*", "readonly": true }}
 { "apiVersion": "abac.authorization.kubernetes.io/v1beta1", "kind": "Policy", "spec": { "user":"skydns", "namespace": "*", "resource": "*", "readonly": true }}
+{ "apiVersion": "abac.authorization.kubernetes.io/v1beta1", "kind": "Policy", "spec": { "user":"system:serviceaccount:platform-services:kube-dns","namespace":"*","resource":"*","apiGroup":"*", "readonly": true}}
 EOF
   fi
 }

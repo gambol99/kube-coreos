@@ -190,10 +190,11 @@ coreos:
 
       ExecStartPre=/usr/bin/mkdir -p /etc/kubernetes/manifests
       ExecStartPre=/opt/bin/kmsctl s3 get -output-dir=%t/kubelet compute/kubeconfig_kubelet compute/kubeconfig_proxy
-      ExecStartPre=/opt/bin/kmsctl s3 get -output-dir=/etc/kubernetes/manifests --recursive=true manifests/addons
+      ExecStartPre=/opt/bin/kmsctl s3 get -output-dir=/etc/kubernetes --recursive --flatten=false manifests/compute
 
       ExecStart=/usr/lib/coreos/kubelet-wrapper \
         --cloud-provider=aws \
+        --cloud-config=/etc/cloud.cfg \
         --address=0.0.0.0 \
         --api-servers=${kube_elb_dns_name} \
         --kubeconfig=%t/kubelet/kubeconfig_kubelet \
@@ -209,6 +210,13 @@ coreos:
         --cpu-cfs-quota=true \
         --logtostderr=true
 write_files:
+- path: /etc/cloud.cfg
+  permissions: 0444
+  owner: root
+  content: |
+    [Global]
+    KubernetesClusterTag = "${platform}"
+    DisableSecurityGroupIngress = true
 - path: /etc/sysctl.d/10-disable-ipv6.conf
   permissions: 0644
   owner: root

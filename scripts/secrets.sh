@@ -10,7 +10,7 @@ upload_secrets() {
     cd secrets/
     for _file in */**; do
       # step: we dont need to push the manifests
-      [[ "${file}" =~ ^manifests.*$ ]] && continue
+      [[ "${_file}" =~ ^manifests.*$ ]] && continue
       kmsctl put --bucket ${CONFIG_SECRET_BUCKET_NAME} --kms ${CONFIG_AWS_KMS_ID} ${_file}
     done
   )

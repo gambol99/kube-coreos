@@ -71,7 +71,7 @@ resource "aws_security_group" "kube_elb" {
   tags {
     Name = "${var.environment}-kube-elb"
     Env  = "${var.environment}"
-    Role = "kube"
+    Role = "kubeapi"
   }
 }
 
@@ -86,6 +86,6 @@ resource "aws_security_group" "kubeapi_elb" {
   tags {
     Name = "${var.environment}-kubeapi-elb"
     Env  = "${var.environment}"
-    Role = "kube"
+    Role = "kubeapi"
   }
 }

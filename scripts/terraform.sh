@@ -1,4 +1,4 @@
-#!/bin/bash -x
+#!/bin/bash
 #
 #  vim:ts=2:sw=2:et
 #
@@ -50,7 +50,10 @@ case "$1" in
     ) || failed "unable to perform terraform operation"
     ;;
   *)
-    failed "you have not specified a command to run"
+    (
+      cd terraform && $TERRAFORM get > /dev/null &&
+      $TERRAFORM $@
+    ) || failed "unable to perform terraform operation"
     ;;
 esac
 
