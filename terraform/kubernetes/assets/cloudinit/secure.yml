@@ -199,7 +199,7 @@ write_files:
     spec:
       hostNetwork: true
       containers:
-      - name: sync
+      - name: manifests
         image: quay.io/gambol99/kmsctl:v0.2.0
         args:
         - --region=${aws_region}
@@ -209,14 +209,26 @@ write_files:
         - --sync=true
         - --recursive=true
         - manifests/secure
-        - manifests/addons
         volumeMounts:
         - name: manifests
           mountPath: /etc/kubernetes/manifests
+      - name: addons
+        image: quay.io/gambol99/kmsctl:v0.2.0
+        args:
+        - --region=${aws_region}
+        - get
+        - --output-dir=/etc/kubernetes/addons
+        - --bucket=${secrets_bucket_name}
+        - --sync=true
+        - --recursive=true
+        - manifests/addons
+        volumeMounts:
+        - name: addons
+          mountPath: /etc/kubernetes/manifests/addons
       volumes:
-      - name: manifests
+      - name: addons
         hostPath:
-          path: /etc/kubernetes/manifests
+          path: /etc/kubernetes/manifests/addons
 - path: /etc/sysctl.d/10-disable-ipv6.conf
   permissions: 0644
   owner: root
