@@ -170,6 +170,23 @@ coreos:
         --config=/etc/kubernetes/manifests \
         --logtostderr=true
 write_files:
+- path: /etc/cloud.cfg
+  permissions: 0444
+  owner: root
+  content: |
+    [Global]
+    KubernetesClusterTag = "${platform}"
+    DisableSecurityGroupIngress = true
+- path: /etc/kmsctl
+  content: |
+    AWS_S3_BUCKET=${secrets_bucket_name}
+    AWS_DEFAULT_REGION=${aws_region}
+- path: /etc/aws-environment
+  content: |
+    AWS_REGION=${aws_region}
+    DNS_ZONE_NAME=${dns_zone_name}
+    ENVIRONMENT=${environment}
+    PLATFORM_NAME=${platform}
 - path: /etc/kubernetes/manifests/sync-kubefiles.service
   permissions: 0444
   owner: root
@@ -184,35 +201,24 @@ write_files:
       containers:
       - name: sync
         image: quay.io/gambol99/kmsctl:v0.2.0
-        command:
+        args:
         - --region=${aws_region}
         - get
-        - --bucket ${secrets_bucket_name}
-        - --sync=true
         - --output-dir=/etc/kubernetes/manifests
+        - --bucket=${secrets_bucket_name}
+        - --sync=true
         - --recursive=true
-        - --flatten=false
         - manifests/secure
         - manifests/addons
         volumeMounts:
         - name: manifests
           mountPath: /etc/kubernetes/manifests
-    volumes:
-    - name: manifests
-      hostPath:
-        path: /etc/kubernetes/manifests
+      volumes:
+      - name: manifests
+        hostPath:
+          path: /etc/kubernetes/manifests
 - path: /etc/sysctl.d/10-disable-ipv6.conf
   permissions: 0644
   owner: root
   content: |
     net.ipv6.conf.all.disable_ipv6 = 1
-- path: /etc/kmsctl
-  content: |
-    AWS_S3_BUCKET=${secrets_bucket_name}
-    AWS_DEFAULT_REGION=${aws_region}
-- path: /etc/aws-environment
-  content: |
-    AWS_REGION=${aws_region}
-    DNS_ZONE_NAME=${dns_zone_name}
-    ENVIRONMENT=${environment}
-    PLATFORM_NAME=${platform}

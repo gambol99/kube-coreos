@@ -5,17 +5,36 @@
       "Resource": "*",
       "Effect": "Allow",
       "Action": [
-        "ec2:DescribeInstances",
-        "ec2:DescribeTags",
-        "ec2:DescribeRouteTables",
-        "ec2:DescribeVpcs",
-        "ec2:DescribeRouteTables",
-        "ec2:CreateRoute",
-        "ec2:DeleteRoute",
-        "ec2:CreateVolume",
-        "ec2:DeleteVolume",
-        "ec2:ModifyInstanceAttribute",
         "autoscaling:Describe*",
+        "ec2:AttachNetworkInterface",
+        "ec2:AttachVolume",
+        "ec2:AuthorizeSecurityGroupEgress",
+        "ec2:AuthorizeSecurityGroupIngress",
+        "ec2:CreateRoute",
+        "ec2:CreateSecurityGroup",
+        "ec2:CreateTags",
+        "ec2:CreateVolume",
+        "ec2:DeleteRoute",
+        "ec2:DeleteSecurityGroup",
+        "ec2:DeleteVolume",
+        "ec2:DescribeInstances",
+        "ec2:DescribeNetworkInterfaces",
+        "ec2:DescribeRouteTables",
+        "ec2:DescribeRouteTables",
+        "ec2:DescribeSecurityGroups",
+        "ec2:DescribeSubnets",
+        "ec2:DescribeTags",
+        "ec2:DescribeVolumes",
+        "ec2:DescribeVpcs",
+        "ec2:DetachNetworkInterface",
+        "ec2:DetachVolume",
+        "ec2:RevokeSecurityGroupIngress",
+        "ec2:RevokeSecurityGroupEgress",
+        "ec2:ModifyInstanceAttribute",
+        "ec2:ModifyNetworkInterfaceAttribute",
+        "elasticloadbalancing:Create*",
+        "elasticloadbalancing:Delete*",
+        "elasticloadbalancing:ConfigureHealthCheck",
         "elasticloadbalancing:DescribeLoadBalancers",
         "elasticloadbalancing:RegisterInstancesWithLoadBalancer",
         "elasticloadbalancing:DeregisterInstancesFromLoadBalancer"
@@ -39,13 +58,7 @@
         "s3:Get*"
       ]
     },{
-      "Resource": "arn:aws:s3:::${secrets_bucket_name}/manifests/compute/*",
-      "Effect": "Allow",
-      "Action": [
-        "s3:Get*"
-      ]
-    },{
-      "Resource": "arn:aws:s3:::${secrets_bucket_name}/manifests/secure/*",
+      "Resource": "arn:aws:s3:::${secrets_bucket_name}/manifests/*/*",
       "Effect": "Allow",
       "Action": [
         "s3:Get*"

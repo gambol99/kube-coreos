@@ -194,6 +194,7 @@ coreos:
 
       ExecStart=/usr/lib/coreos/kubelet-wrapper \
         --cloud-provider=aws \
+        --cloud-config=/etc/cloud.cfg \
         --address=0.0.0.0 \
         --api-servers=${kube_elb_dns_name} \
         --kubeconfig=%t/kubelet/kubeconfig_kubelet \
@@ -209,6 +210,13 @@ coreos:
         --cpu-cfs-quota=true \
         --logtostderr=true
 write_files:
+- path: /etc/cloud.cfg
+  permissions: 0444
+  owner: root
+  content: |
+    [Global]
+    KubernetesClusterTag = "${platform}"
+    DisableSecurityGroupIngress = true
 - path: /etc/sysctl.d/10-disable-ipv6.conf
   permissions: 0644
   owner: root

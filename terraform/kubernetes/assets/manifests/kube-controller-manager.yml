@@ -4,6 +4,7 @@ metadata:
   name: kube-controller-manager
   namespace: kube-system
 spec:
+  hostNetwork: true
   containers:
   - name: kube-controller-manager
     image: ${kubernetes_image}:${kubernetes_version}
@@ -11,6 +12,8 @@ spec:
     - /hyperkube
     - controller-manager
     - --master=http://127.0.0.1:8080
+    - --cloud-provider=aws
+    - --cloud-config=/etc/cloud.cfg
     - --leader-elect=true
     - --service-account-private-key-file=/etc/secrets/kubeapi-key.pem
     resources:
@@ -30,7 +33,9 @@ spec:
     - name: certs
       mountPath: /etc/ssl/certs
       readOnly: true
-  hostNetwork: true
+    - name: cloud-config
+      mountPath: /etc/cloud.cfg
+      readOnly: true
   volumes:
   - name: secrets
     hostPath:
@@ -38,3 +43,6 @@ spec:
   - name: certs
     hostPath:
       path: /usr/share/ca-certificates
+  - name: cloud-config
+    hostPath:
+      path: /etc/cloud.cfg

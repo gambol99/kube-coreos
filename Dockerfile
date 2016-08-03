@@ -30,4 +30,6 @@ RUN /usr/bin/cfssl version
 RUN /usr/bin/kubectl version --client
 RUN /usr/bin/terraform version
 
+ADD scripts/.bashrc /root/.bashrc
+
 ENTRYPOINT [ "/bin/bash" ]

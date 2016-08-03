@@ -43,7 +43,7 @@ variable "kubernetes_image" {
 }
 variable "kubernetes_version" {
   description = "The version / tag version of the kubernetes release"
-  default     = "v1.3.0_coreos.1"
+  default     = "v1.3.3_coreos.0"
 }
 variable "kubernetes_service_range" {
   description = "The CIDR of the kubernetes service address space"
