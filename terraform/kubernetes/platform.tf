@@ -3,10 +3,10 @@
 ## The AWS Provider
 #
 provider "aws" {
-  access_key  = "${var.aws_access_key}"
-  secret_key  = "${var.aws_secret_key}"
-  region      = "${var.aws_region}"
-  max_retries = "5"
+  max_retries             = "10"
+  profile                 = "${var.aws_profile}"
+  region                  = "${var.aws_region}"
+  shared_credentials_file = "${var.aws_shared_credentials_file}"
 }
 
 #

@@ -2,6 +2,7 @@
 ## Module Outputs
 #
 
+output "aws_profile"             { value = "${var.aws_profile}" }
 output "aws_region"              { value = "${var.aws_region}" }
 output "compute_asg_az"          { value = "${aws_autoscaling_group.compute.availability_zones}" }
 output "compute_asg_id"          { value = "${aws_autoscaling_group.compute.id}" }

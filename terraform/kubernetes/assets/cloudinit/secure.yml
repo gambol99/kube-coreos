@@ -194,7 +194,7 @@ write_files:
     apiVersion: v1
     kind: Pod
     metadata:
-      name: kube-apiserver
+      name: kube-sync
       namespace: kube-system
     spec:
       hostNetwork: true
@@ -217,18 +217,15 @@ write_files:
         args:
         - --region=${aws_region}
         - get
-        - --output-dir=/etc/kubernetes/addons
+        - --output-dir=/etc/kubernetes/manifests/addons
         - --bucket=${secrets_bucket_name}
         - --sync=true
         - --recursive=true
         - manifests/addons
         volumeMounts:
-        - name: addons
-          mountPath: /etc/kubernetes/manifests/addons
+        - name: manifests
+          mountPath: /etc/kubernetes/manifests
       volumes:
-      - name: addons
-        hostPath:
-          path: /etc/kubernetes/manifests/addons
       - name: manifests
         hostPath:
           path: /etc/kubernetes/manifests

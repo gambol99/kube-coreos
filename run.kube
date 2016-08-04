@@ -27,10 +27,12 @@ failed() {
 
 run() {
   /usr/bin/docker run -ti --rm \
+    -e CONFIG_AWS_SHARED_CREDENTIALS_FILE=/root/.aws/credentials \
     -v ${PWD}/${ENVIRONMENT_FILE}:${WORKDIR}/env.tfvars \
     -v ${PWD}/ca:${WORKDIR}/ca \
     -v ${PWD}/kube:${WORKDIR}/kubernetes \
     -v ${PWD}/terraform:${WORKDIR}/terraform \
+    -v ${HOME}/.aws/credentials:/root/.aws/credentials:ro \
     -v ${PWD}/scripts:${WORKDIR}/scripts \
     ${KUBE_IMAGE}:${KUBE_TAG}
 }

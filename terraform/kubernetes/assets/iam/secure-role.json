@@ -37,7 +37,8 @@
         "elasticloadbalancing:ConfigureHealthCheck",
         "elasticloadbalancing:DescribeLoadBalancers",
         "elasticloadbalancing:RegisterInstancesWithLoadBalancer",
-        "elasticloadbalancing:DeregisterInstancesFromLoadBalancer"
+        "elasticloadbalancing:DeregisterInstancesFromLoadBalancer",
+        "elasticloadbalancing:SetLoadBalancerPoliciesForBackendServer"
       ]
     },{
       "Resource": "arn:aws:kms:${aws_region}:${aws_account}:key/${kms_master_id}",

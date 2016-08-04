@@ -23,7 +23,7 @@ variable "secrets_bucket_name" {
 }
 variable "coreos_image" {
   description = "The CoreOS image ami we should be using"
-  default     = "ami-7a46d809"
+  default     = "ami-cbb5d5b8"
 }
 variable "flannel_cidr" {
   description = "The flannel overlay network cidr"
@@ -43,7 +43,7 @@ variable "kubernetes_image" {
 }
 variable "kubernetes_version" {
   description = "The version / tag version of the kubernetes release"
-  default     = "v1.3.3_coreos.0"
+  default     = "v1.3.4_coreos.0"
 }
 variable "kubernetes_service_range" {
   description = "The CIDR of the kubernetes service address space"
@@ -66,14 +66,14 @@ variable "terraform_bucket_name" {
 #
 ## AWS PROVIDER ##
 #
-variable "aws_access_key" {
-  description = "The AWS Access Key for API access"
+variable "aws_shared_credentials_file" {
+  description = "The file containing the AWS credentials"
+}
+variable "aws_profile" {
+  description = "The AWS profile to use from within the credentials file"
 }
 variable "aws_region" {
   description = "The AWS Region we are building the cluster in"
-}
-variable "aws_secret_key" {
-  description = "The AWS Secret Key for API access"
 }
 
 #
@@ -89,6 +89,17 @@ variable "compute_subnets" {
     "az0_cidr"  = "10.100.0.0/24"
     "az1_cidr"  = "10.100.1.0/24"
     "az2_cidr"  = "10.100.2.0/24"
+    "az0_zone"  = "eu-west-1a"
+    "az1_zone"  = "eu-west-1b"
+    "az2_zone"  = "eu-west-1c"
+  }
+}
+variable "elb_subnets" {
+  description = "The ELB subnets and the zone's they occupy"
+  default = {
+    "az0_cidr"  = "10.100.20.0/24"
+    "az1_cidr"  = "10.100.21.0/24"
+    "az2_cidr"  = "10.100.22.0/24"
     "az0_zone"  = "eu-west-1a"
     "az1_zone"  = "eu-west-1b"
     "az2_zone"  = "eu-west-1c"

@@ -80,12 +80,7 @@ coreos:
     - name: 10-opts.conf
       content: |
         [Service]
-        Environment="DOCKER_OPTS=--iptables=false --log-opt max-size=100m --log-opt max-file=1"
-    - name: 20-flanneld.conf
-      content: |
-        [Unit]
-        After=flanneld.service
-        Requires=flanneld.service
+        Environment="DOCKER_OPTS=--iptables=false --log-opt max-size=100m --log-opt max-file=1 --default-ulimit=nofile=32768:32768 --default-ulimit=nproc=16384:16384"
   - name: etcd2.service
     command: start
     enable: true
@@ -117,11 +112,7 @@ coreos:
     - name: 50-network-config.conf
       content: |
         [Service]
-        ExecStartPre=/usr/bin/etcdctl --peers https://127.0.0.1:2379 set /coreos.com/network/config '{"Network":"{{ flannel_cidr }}","Backend":{"Type":"aws-vpc"}}'
-    - name: 10-env-config.conf
-      content: |
-        [Service]
-        EnvironmentFile=/run/flannel/options.env
+        ExecStartPre=/usr/bin/etcdctl --peers https://127.0.0.1:2379 set /coreos.com/network/config '{"Network":"${flannel_cidr}","Backend":{"Type":"aws-vpc"}}'
   # @TODO - switching the auto-update for now, doesnt work well in a ASG
   - name: install-kmsctl.service
     command: start
@@ -160,7 +151,7 @@ coreos:
       RemainAfterExit=yes
       TimeoutStartSec=300
       ExecStartPre=/usr/bin/mkdir -p /etc/ssl/etcd
-      ExecStartPre=/opt/bin/kmsctl s3 get --output-dir=/etc/ssl/certs common/ca.pem
+      ExecStartPre=/opt/bin/kmsctl get --output-dir=/etc/ssl/certs common/ca.pem
       ExecStartPre=/usr/bin/cp -f /etc/ssl/certs/ca.pem /etc/ssl/etcd/ca.pem
       ExecStartPre=/usr/sbin/update-ca-certificates
       ExecStart=/usr/bin/systemd-notify --ready --status="succussfully updated the ca root certificates"
@@ -168,14 +159,16 @@ coreos:
   - name: update-engine.service
     command: stop
     enable: false
-  - name: kubelet.ervice
+  - name: kubelet.service
     command: start
     content: |
       [Unit]
       Description=Kubernetes Kubelet
       Documentation=https://github.com/GoogleCloudPlatform/kubernetes
       Requires=install-kmsctl.service
+      Requires=etcd-discovery.service
       After=install-kmsctl.service
+      After=etcd-discovery.service
 
       [Service]
       Restart=always
@@ -189,8 +182,8 @@ coreos:
       EnvironmentFile=/etc/aws-environment
 
       ExecStartPre=/usr/bin/mkdir -p /etc/kubernetes/manifests
-      ExecStartPre=/opt/bin/kmsctl s3 get -output-dir=%t/kubelet compute/kubeconfig_kubelet compute/kubeconfig_proxy
-      ExecStartPre=/opt/bin/kmsctl s3 get -output-dir=/etc/kubernetes --recursive --flatten=false manifests/compute
+      ExecStartPre=/opt/bin/kmsctl get -output-dir=%t/kubelet compute/kubeconfig_kubelet compute/kubeconfig_proxy
+      ExecStartPre=/opt/bin/kmsctl get -output-dir=/etc/kubernetes/manifests --recursive manifests/compute
 
       ExecStart=/usr/lib/coreos/kubelet-wrapper \
         --cloud-provider=aws \

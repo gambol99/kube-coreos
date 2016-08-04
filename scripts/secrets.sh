@@ -19,6 +19,14 @@ upload_secrets() {
 fetch_secrets() {
   annonce "Fetching the secrets to the s3 bucket: ${CONFIG_SECRET_BUCKET_NAME}"
   kmsctl get --bucket ${CONFIG_SECRET_BUCKET_NAME} --flatten=false -d=${SECRETS_DIR} --recursive /
+  setup_secrets
+}
+
+setup_secrets() {
+  mkdir -p ${HOME}/.kube
+  if [[ ! -L "${HOME}/.kube/config" ]]; then
+    ln -sf ${PWD}/${SECRETS_DIR}/secure/kubeconfig_admin ${HOME}/.kube/config
+  fi
 }
 
 case "$1" in
