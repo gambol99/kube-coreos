@@ -229,6 +229,9 @@ write_files:
       - name: addons
         hostPath:
           path: /etc/kubernetes/manifests/addons
+      - name: manifests
+        hostPath:
+          path: /etc/kubernetes/manifests
 - path: /etc/sysctl.d/10-disable-ipv6.conf
   permissions: 0644
   owner: root
