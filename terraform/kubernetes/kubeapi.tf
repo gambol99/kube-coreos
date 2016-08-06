@@ -47,6 +47,18 @@ resource "aws_security_group_rule" "kubeapi_allow_443" {
 }
 
 #
+## Egress Rule permits Kubernetes API Outbout
+#
+resource "aws_security_group_rule" "kubeapi_allow_6443" {
+  type                     = "egress"
+  security_group_id        = "${aws_security_group.kubeapi_elb.id}"
+  protocol                 = "tcp"
+  from_port                = 6443
+  to_port                  = 6443
+  cidr_blocks              = [ "0.0.0.0/0" ]
+}
+
+#
 ## Egress Rule for Kubernetes API
 #
 resource "aws_security_group_rule" "kubeapi_elb_allow_443" {

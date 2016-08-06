@@ -21,13 +21,12 @@ spec:
     - --enable-swagger-ui=true
     - --etcd-servers=https://127.0.0.1:2379
     - --runtime-config=extensions/v1beta1=true
-    - --secure-port=443
+    - --secure-port=6443
     - --service-account-key-file=/etc/secrets/kubeapi-key.pem
     - --service-cluster-ip-range=${kubernetes_service_range}
-    - --tls-cert-file=/etc/secret/kubeapi.pem
+    - --tls-cert-file=/etc/secrets/kubeapi.pem
     - --tls-private-key-file=/etc/secrets/kubeapi-key.pem
-    - --token-auth-file=/etc/secrets/token.csv
-    - --v=5
+    - --token-auth-file=/etc/secrets/tokens.csv
     livenessProbe:
       httpGet:
         host: 127.0.0.1

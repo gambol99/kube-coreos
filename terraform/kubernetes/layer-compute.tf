@@ -86,9 +86,6 @@ resource "aws_launch_configuration" "compute" {
   }
 }
 
-#
-## Compute AutoScaling Group
-#
 resource "aws_autoscaling_group" "compute" {
   default_cooldown          = "${var.compute_asg_grace_period}"
   force_delete              = true
@@ -116,6 +113,12 @@ resource "aws_autoscaling_group" "compute" {
   tag {
     key                 = "Role"
     value               = "compute"
+    propagate_at_launch = true
+  }
+
+  tag {
+    key                 = "KubernetesCluster"
+    value               = "${var.environment}"
     propagate_at_launch = true
   }
 }

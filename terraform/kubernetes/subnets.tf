@@ -15,9 +15,10 @@ resource "aws_subnet" "compute_subnets" {
   availability_zone = "${lookup(var.compute_subnets, "az${count.index}_zone")}"
 
   tags {
-    Name = "${var.environment}-compute-az${count.index}"
-    Env  = "${var.environment}"
-    Role = "compute"
+    Env               = "${var.environment}"
+    KubernetesCluster = "${var.environment}"
+    Name              = "${var.environment}-compute-az${count.index}"
+    Role              = "compute"
   }
 }
 
@@ -31,6 +32,34 @@ resource "aws_route_table_association" "compute_routes" {
 }
 
 #
+#### [ELB Subnets] ####
+#
+resource "aws_subnet" "elb_subnets" {
+  count             = 3
+  vpc_id            = "${aws_vpc.vpc.id}"
+  cidr_block        = "${lookup(var.elb_subnets, "az${count.index}_cidr")}"
+  availability_zone = "${lookup(var.elb_subnets, "az${count.index}_zone")}"
+
+  tags {
+    "Env"                             = "${var.environment}"
+    "KubernetesCluster"               = "${var.environment}"
+    "Name"                            = "${var.environment}-elb-az${count.index}"
+  	"Role"                            = "elb"
+    "kubernetes.io/role/internal-elb" = "true"
+    "kubernetes.io/role/elb"          = "true"
+  }
+}
+
+#
+## Route Association for ELB Subnets
+#
+resource "aws_route_table_association" "elb_routes" {
+  count          = 3
+  subnet_id      = "${element(aws_subnet.elb_subnets.*.id, count.index)}"
+  route_table_id = "${aws_route_table.default.id}"
+}
+
+#
 #### [Secure Subnets] ####
 #
 resource "aws_subnet" "secure_subnets" {
@@ -40,9 +69,10 @@ resource "aws_subnet" "secure_subnets" {
   availability_zone = "${lookup(var.secure_subnets, "az${count.index}_zone")}"
 
   tags {
-    Name = "${var.environment}-secure-az${count.index}"
-    Env  = "${var.environment}"
-		Role = "secure"
+    Env               = "${var.environment}"
+    KubernetesCluster = "${var.environment}"
+    Name              = "${var.environment}-secure-az${count.index}"
+  	Role              = "secure"
   }
 }
 

@@ -64,7 +64,7 @@ resource "aws_security_group_rule" "compute_22_allow" {
   protocol          = "tcp"
   from_port         = "22"
   to_port           = "22"
-  cidr_blocks       = [ "${aws_subnet.secure_subnets.*.cidr_block}" ]
+  cidr_blocks       = [ "${split(",", var.ssh_access_list)}" ]
 }
 
 # permitt ssh from the access list

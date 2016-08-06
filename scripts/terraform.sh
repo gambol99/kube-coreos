@@ -13,8 +13,10 @@ if [[ -n "${TERRAFORM_BUCKET}" ]]; then
       cd terraform
       terraform remote config --backend=S3 \
         --backend-config="bucket=${TERRAFORM_BUCKET}" \
-        --backend-config="key=${AWS_DEFAULT_REGION}/${STACKS_ENV}/terraform.tfstate" \
-        --backend-config="encrypt=true"
+        --backend-config="key=${AWS_DEFAULT_REGION}/${PLATFORM_ENV}/terraform.tfstate" \
+        --backend-config="encrypt=true" \
+        --backend-config="shared_credentials_file=${AWS_SHARED_CREDENTIALS_FILE}" \
+        --backend-config="profile=${AWS_DEFAULT_PROFILE}" \
       terraform remote pull
     ) || failed "failed to initialize or pull the terraform remote configuration"
   else

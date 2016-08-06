@@ -108,7 +108,7 @@ create_kubernetes_configs() {
 
   # step: copy the admin kubeconfig to $HOME
   mkdir -p ${HOME}/.kube
-  [[ -L "${PWD}/${SECRETS_DIR}/kubeconfig_admin" ]] || ln -sf ${PWD}/${SECRETS_DIR}/kubeconfig_admin ${HOME}/.kube/config
+  [[ -L "${PWD}/${SECRETS_DIR}/kubeconfig_admin" ]] || ln -sf ${PWD}/${SECRETS_DIR}/secure/kubeconfig_admin ${HOME}/.kube/config
 }
 
 create_kubernetes_auth_policy() {

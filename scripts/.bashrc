@@ -2,6 +2,8 @@
 
 source /kube-coreos/scripts/environment.sh
 
+export PS1="[\u@kube \W]$ "
+
 aws-instances() {
   aws ec2 describe-instances \
     --filter "Name=instance-state-name,Values=running" \
