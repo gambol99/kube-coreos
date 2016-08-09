@@ -9,7 +9,7 @@ RUN pip3 install awscli
 ENV CFSSL_VERSION 1.2
 ENV TERRAFORM_VERSION 0.7.0
 ENV KMSCTL_VERSION 0.2.0
-ENV KUBECTL_VERSION 1.3.3
+ENV KUBECTL_VERSION 1.3.4
 
 RUN curl -s https://pkg.cfssl.org/R${CFSSL_VERSION}/cfssl_linux-amd64 -o /usr/bin/cfssl && chmod +x /usr/bin/cfssl
 RUN curl -s https://pkg.cfssl.org/R${CFSSL_VERSION}/cfssljson_linux-amd64 -o /usr/bin/cfssljson && chmod +x /usr/bin/cfssljson
