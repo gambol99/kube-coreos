@@ -6,6 +6,12 @@ coreos:
     listen-client-urls: https://127.0.0.1:2379
     cert-file: /run/etcd2/etcd.pem
     key-file: /run/etcd2/etcd-key.pem
+  flannel:
+    interface: $private_ipv4
+    etcd_endpoints: https://127.0.0.1:2379
+    etcd_cafile: /etc/ssl/etcd/ca.pem
+  locksmith:
+    endpoint: https://127.0.0.1:2379
   update:
     reboot-strategy: 'off'
   units:
@@ -69,12 +75,15 @@ coreos:
       Before=etcd2.service
 
       [Service]
+      Type=notify
+      NotifyAccess=all
       RemainAfterExit=yes
       Restart=always
       RestartSec=10
-      ExecStart=/opt/bin/etcd-discovery \
+      ExecStartPre=/opt/bin/etcd-discovery \
         -scaling-group-name=${secure_asg_name} -proxy-mode=true \
         -environment-file=/etc/sysconfig/etcd-discovery -logtostderr -v=10
+      ExecStart=/usr/bin/systemd-notify --ready --status="succussfully performed etcd discovery"
   - name: docker.service
     drop-ins:
     - name: 10-opts.conf
@@ -89,8 +98,10 @@ coreos:
       content: |
         [Unit]
         Requires=update-ca-certificates.service
+        Requires=etcd-discovery.service
         Requires=install-kmsctl.service
         After=update-ca-certificates.service
+        After=etcd-discovery.service
         After=install-kmsctl.service
     - name: 15-kmsctl.conf
       content: |
@@ -113,7 +124,10 @@ coreos:
       content: |
         [Service]
         ExecStartPre=/usr/bin/etcdctl --peers https://127.0.0.1:2379 set /coreos.com/network/config '{"Network":"${flannel_cidr}","Backend":{"Type":"aws-vpc"}}'
-  # @TODO - switching the auto-update for now, doesnt work well in a ASG
+    - name: 10-env-config.conf
+      content: |
+        [Service]
+        EnvironmentFile=/run/flannel/options.env
   - name: install-kmsctl.service
     command: start
     content: |
@@ -177,6 +191,7 @@ coreos:
       RuntimeDirectoryMode=0700
       Environment=KUBELET_VERSION=${kubernetes_version}
       Environment=KUBELET_ACI=${kubernetes_image}
+      Environment="RKT_OPTS=--volume etc-resolv-conf,kind=host,source=/etc/resolv.conf --mount volume=etc-resolv-conf,target=/etc/resolv.conf"
       EnvironmentFile=/etc/kmsctl
       EnvironmentFile=/etc/environment
       EnvironmentFile=/etc/aws-environment
@@ -187,7 +202,7 @@ coreos:
 
       ExecStart=/usr/lib/coreos/kubelet-wrapper \
         --cloud-provider=aws \
-        --cloud-config=/etc/cloud.cfg \
+        --cloud-config=/etc/kubernetes/cloud.cfg \
         --address=0.0.0.0 \
         --api-servers=${kube_elb_dns_name} \
         --kubeconfig=%t/kubelet/kubeconfig_kubelet \
@@ -203,7 +218,7 @@ coreos:
         --cpu-cfs-quota=true \
         --logtostderr=true
 write_files:
-- path: /etc/cloud.cfg
+- path: /etc/kubernetes/cloud.cfg
   permissions: 0444
   owner: root
   content: |

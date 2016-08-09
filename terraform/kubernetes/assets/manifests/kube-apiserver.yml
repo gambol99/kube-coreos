@@ -16,7 +16,7 @@ spec:
     - --authorization-mode=ABAC
     - --authorization-policy-file=/etc/secrets/auth-policy.json
     - --bind-address=0.0.0.0
-    - --cloud-config=/etc/cloud.cfg
+    - --cloud-config=/etc/kubernetes/cloud.cfg
     - --cloud-provider=aws
     - --enable-swagger-ui=true
     - --etcd-servers=https://127.0.0.1:2379
@@ -49,7 +49,7 @@ spec:
       mountPath: /etc/ssl/certs
       readOnly: true
     - name: cloud-config
-      mountPath: /etc/cloud.cfg
+      mountPath: /etc/kubernetes/cloud.cfg
       readOnly: true
   volumes:
   - name: secrets
@@ -60,4 +60,4 @@ spec:
       path: /etc/ssl/certs
   - name: cloud-config
     hostPath:
-      path: /etc/cloud.cfg
+      path: /etc/kubernetes/cloud.cfg

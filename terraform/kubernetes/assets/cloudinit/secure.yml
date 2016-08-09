@@ -170,7 +170,7 @@ coreos:
         --config=/etc/kubernetes/manifests \
         --logtostderr=true
 write_files:
-- path: /etc/cloud.cfg
+- path: /etc/kubernetes/cloud.cfg
   permissions: 0444
   owner: root
   content: |
