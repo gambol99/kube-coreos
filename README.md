@@ -52,7 +52,7 @@ dev.tfvars  env.tfvars.sample
 # - will generate the certificates, secrets and start build the environment
 [root@platform kube-coreos]$ scripts/run.sh
 [root@platform kube-coreos]$ aws-instances
-[root@platform kube-coreos]$ aws-instances 
+[root@platform kube-coreos]$ aws-instances
 -------------------------------------------------------------------------------------------
 |                                    DescribeInstances                                    |
 +-------------+----------------+-----------------+-------------+-----------+--------------+
@@ -62,6 +62,21 @@ dev.tfvars  env.tfvars.sample
 |  dev-secure |  10.100.10.51  |  52.209.195.91  |  i-777a55fb |  running  |  eu-west-1a  |
 |  dev-secure |  10.100.12.23  |  52.209.195.176 |  i-36e20ebb |  running  |  eu-west-1c  |
 +-------------+----------------+-----------------+-------------+-----------+--------------+
+
+# list the Kubernetes api ELB
+[root@platform kube-coreos]$ aws-elbs
+--------------------------------------------------------------------------------------
+|                                DescribeLoadBalancers                               |
++----------------+-------------------------------------------------------------------+
+|  dev-kubeapi   |  dev-kubeapi-1815972942.eu-west-1.elb.amazonaws.com               |
+|  dev-kube-elb  |  internal-dev-kube-elb-457444291.eu-west-1.elb.amazonaws.com      |
+|  dev-secure-elb|  internal-dev-secure-elb-1990127985.eu-west-1.elb.amazonaws.com   |
++----------------+-------------------------------------------------------------------+
+
+[root@platform kube-coreos]$  kubectl -s https://dev-kubeapi-1815972942.eu-west-1.elb.amazonaws.com get ns
+NAME          STATUS    AGE
+default       Active    20m
+kube-system   Active    20m
 ```
 
 #### **- Kubernetes Configuration**
@@ -79,4 +94,3 @@ During the setup (and redone on every run) the environment ssh key is copied int
 #### **- Terraform Remote State**
 
 Assuming you wish to use terraform remote state and I highly recommend you should, you need to create an s3 bucket for the remote state. Once the bucket has been created, we can add the 'terraform_bucket_name' variable to the terraform tfvars file. The bucket will be automatically provision and the state push on every run.
-
