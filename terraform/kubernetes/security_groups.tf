@@ -54,7 +54,7 @@ resource "aws_security_group" "secure_elb" {
   vpc_id      = "${aws_vpc.vpc.id}"
 
   tags {
-    Name = "${var.environment}-secure-elb-sg"
+    Name = "${var.environment}-secure-elb"
     Env  = "${var.environment}"
     Role = "secure"
   }

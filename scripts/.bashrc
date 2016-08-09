@@ -2,7 +2,7 @@
 
 source /kube-coreos/scripts/environment.sh
 
-export PS1="[\u@kube \W]$ "
+export PS1="[kubernetes@\W]$ "
 
 aws-instances() {
   aws ec2 describe-instances \

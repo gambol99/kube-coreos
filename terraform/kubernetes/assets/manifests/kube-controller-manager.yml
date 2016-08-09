@@ -13,7 +13,7 @@ spec:
     - controller-manager
     - --master=http://127.0.0.1:8080
     - --cloud-provider=aws
-    - --cloud-config=/etc/cloud.cfg
+    - --cloud-config=/etc/kubernetes/cloud.cfg
     - --leader-elect=true
     - --service-account-private-key-file=/etc/secrets/kubeapi-key.pem
     resources:
@@ -45,4 +45,4 @@ spec:
       path: /usr/share/ca-certificates
   - name: cloud-config
     hostPath:
-      path: /etc/cloud.cfg
+      path: /etc/kubernetes/cloud.cfg
