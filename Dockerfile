@@ -7,7 +7,6 @@ RUN dnf install -y -q git unzip procps-ng openssl jq which tar openssh-clients &
 RUN pip3 install awscli
 
 ENV CFSSL_VERSION 1.2
-ENV VAULT_VERSION 0.5.3
 ENV TERRAFORM_VERSION 0.7.0
 ENV KMSCTL_VERSION 0.2.0
 ENV KUBECTL_VERSION 1.3.3
