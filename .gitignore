@@ -9,6 +9,7 @@
 *.pem
 *.csr
 *.rollout
+*.orig
 terraform.tfstate.backup
 terraform.tfstate
 secrets.env
