@@ -164,7 +164,7 @@ coreos:
       EnvironmentFile=/etc/kmsctl
       RemainAfterExit=yes
       TimeoutStartSec=300
-      ExecStartPre=/usr/bin/mkdir -p /etc/ssl/etcd
+      ExecStartPre=/usr/bin/mkdir -p /etcl/etcd
       ExecStartPre=/opt/bin/kmsctl get --output-dir=/etc/ssl/certs common/ca.pem
       ExecStartPre=/usr/bin/cp -f /etc/ssl/certs/ca.pem /etc/ssl/etcd/ca.pem
       ExecStartPre=/usr/sbin/update-ca-certificates
@@ -191,32 +191,35 @@ coreos:
       RuntimeDirectoryMode=0700
       Environment=KUBELET_VERSION=${kubernetes_version}
       Environment=KUBELET_ACI=${kubernetes_image}
-      Environment="RKT_OPTS=--volume etc-resolv-conf,kind=host,source=/etc/resolv.conf --mount volume=etc-resolv-conf,target=/etc/resolv.conf"
+      Environment="RKT_OPTS=--volume etc-resolv-conf,kind=host,source=/etc/resolv.conf --mount volume=etc-resolv-conf,target=/etc/resolv.conf \
+        --volume=etc-ssl-certs,kind=host,source=/etc/ssl/certs --mount volume=resolv,target=/etc/ssl/certs
       EnvironmentFile=/etc/kmsctl
       EnvironmentFile=/etc/environment
       EnvironmentFile=/etc/aws-environment
 
-      ExecStartPre=/usr/bin/mkdir -p /etc/kubernetes/manifests
+      ExecStartPre=/usr/bin/systemctl --quiet is-active update-ca-certificates.service
+      ExecStartPre=/usr/bin/systemctl --quiet is-active flanneld.service
+      ExecStartPre=/bin/mkdir -p /etc/kubernetes/manifests
       ExecStartPre=/opt/bin/kmsctl get -output-dir=%t/kubelet compute/kubeconfig_kubelet compute/kubeconfig_proxy
       ExecStartPre=/opt/bin/kmsctl get -output-dir=/etc/kubernetes/manifests --recursive manifests/compute
 
       ExecStart=/usr/lib/coreos/kubelet-wrapper \
-        --cloud-provider=aws \
-        --cloud-config=/etc/kubernetes/cloud.cfg \
         --address=0.0.0.0 \
         --api-servers=${kube_elb_dns_name} \
-        --kubeconfig=%t/kubelet/kubeconfig_kubelet \
-        --config=/etc/kubernetes/manifests \
+        --cloud-config=/etc/kubernetes/cloud.cfg \
+        --cloud-provider=aws \
         --cluster-dns=${kubernetes_dns_service_address} \
         --cluster-domain=cluster.local \
-        --image-gc-high-threshold=60 \
-        --image-gc-low-threshold=40 \
-        --maximum-dead-containers=10 \
-        --maximum-dead-containers-per-container=1 \
-        --image-gc-high-threshold=60 \
-        --image-gc-low-threshold=40 \
+        --config=/etc/kubernetes/manifests \
         --cpu-cfs-quota=true \
-        --logtostderr=true
+        --image-gc-high-threshold=60 \
+        --image-gc-high-threshold=60 \
+        --image-gc-low-threshold=40 \
+        --image-gc-low-threshold=40 \
+        --kubeconfig=%t/kubelet/kubeconfig_kubelet \
+        --logtostderr=true \
+        --maximum-dead-containers-per-container=1 \
+        --maximum-dead-containers=10
 write_files:
 - path: /etc/kubernetes/cloud.cfg
   permissions: 0444

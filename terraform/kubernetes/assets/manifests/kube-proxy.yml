@@ -29,7 +29,7 @@ spec:
   volumes:
   - name: certs
     hostPath:
-      path: /usr/share/ca-certificates
+      path: /etc/ssl/certs
   - name: secrets
     hostPath:
       path: /run/kubelet

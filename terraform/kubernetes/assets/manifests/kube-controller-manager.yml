@@ -42,7 +42,7 @@ spec:
       path: /run/kubelet
   - name: certs
     hostPath:
-      path: /usr/share/ca-certificates
+      path: /etc/ssl/certs
   - name: cloud-config
     hostPath:
       path: /etc/kubernetes/cloud.cfg
