@@ -164,7 +164,7 @@ coreos:
       EnvironmentFile=/etc/kmsctl
       RemainAfterExit=yes
       TimeoutStartSec=300
-      ExecStartPre=/usr/bin/mkdir -p /etcl/etcd
+      ExecStartPre=/usr/bin/mkdir -p /etc/ssl/etcd
       ExecStartPre=/opt/bin/kmsctl get --output-dir=/etc/ssl/certs common/ca.pem
       ExecStartPre=/usr/bin/cp -f /etc/ssl/certs/ca.pem /etc/ssl/etcd/ca.pem
       ExecStartPre=/usr/sbin/update-ca-certificates
