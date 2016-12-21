@@ -1,0 +1,75 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: kube-controller-manager
+  namespace: kube-system
+spec:
+  hostNetwork: true
+  containers:
+  - name: secrets
+    image: ${kmsctl_image}
+    args:
+    - --region=${aws_region}
+    - get
+    - --output-dir=/etc/secrets
+    - --bucket=${secrets_bucket_name}
+    - --sync=true
+    - --sync-interval=10m
+    - --recursive=true
+    - secure/kubeconfig_controller
+    - secure/kubeapi-key.pem
+    resources:
+      requests:
+        cpu: 50m
+        memory: 50Mi
+      limits:
+        cpu: 200m
+        memory: 800Mi
+    volumeMounts:
+    - name: secrets
+      mountPath: /etc/secrets
+  - name: kube-controller-manager
+    image: ${kubernetes_image}
+    command:
+    - /hyperkube
+    - controller-manager
+    - --master=https://127.0.0.1:6443
+    - --cloud-provider=aws
+    - --cloud-config=/etc/kubernetes/cloud.cfg
+    - --leader-elect=true
+    - --kubeconfig=/etc/secrets/kubeconfig_controller
+    - --root-ca-file=/etc/ssl/certs/platform_ca.pem
+    - --service-account-private-key-file=/etc/secrets/kubeapi-key.pem
+    livenessProbe:
+      httpGet:
+        host: 127.0.0.1
+        path: /healthz
+        port: 10252
+      initialDelaySeconds: 15
+      timeoutSeconds: 15
+    resources:
+      requests:
+        cpu: 50m
+        memory: 50Mi
+      limits:
+        cpu: 2000m
+        memory: 8000Mi
+    volumeMounts:
+    - name: secrets
+      mountPath: /etc/secrets
+      readOnly: true
+    - name: certs
+      mountPath: /etc/ssl/certs
+      readOnly: true
+    - name: kubernetes
+      mountPath: /etc/kubernetes
+      readOnly: true
+  volumes:
+  - name: secrets
+    emptyDir: {}
+  - name: certs
+    hostPath:
+      path: /etc/ssl/certs
+  - name: kubernetes
+    hostPath:
+      path: /etc/kubernetes

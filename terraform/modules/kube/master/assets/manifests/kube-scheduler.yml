@@ -1,0 +1,69 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: kube-scheduler
+  namespace: kube-system
+spec:
+  hostNetwork: true
+  containers:
+  - name: secrets
+    image: ${kmsctl_image}
+    args:
+    - --region=${aws_region}
+    - get
+    - --output-dir=/etc/secrets
+    - --bucket=${secrets_bucket_name}
+    - --sync=true
+    - --sync-interval=10m
+    - secure/kubeconfig_scheduler
+    resources:
+      requests:
+        cpu: 50m
+        memory: 50Mi
+      limits:
+        cpu: 200m
+        memory: 800Mi
+    volumeMounts:
+    - name: secrets
+      mountPath: /etc/secrets
+  - name: scheduler
+    image: ${kubernetes_image}
+    command:
+    - /hyperkube
+    - scheduler
+    - --master=http://127.0.0.1:8080
+    - --kubeconfig=/etc/secrets/kubeconfig_scheduler
+    - --leader-elect=true
+    livenessprobe:
+      httpGet:
+        host: 127.0.0.1
+        path: /healthz
+        port: 10251
+      initialDelaySeconds: 15
+      timeoutSeconds: 15
+    resources:
+      requests:
+        cpu: 50m
+        memory: 50Mi
+      limits:
+        cpu: 2000m
+        memory: 8000Mi
+    volumeMounts:
+    - name: secrets
+      mountPath: /etc/secrets
+      readOnly: true
+    - name: certs
+      mountPath: /etc/ssl/certs
+      readOnly: true
+    - name: kubernetes
+      mountPath: /etc/kubernetes
+      readOnly: true
+  volumes:
+  - name: secrets
+    emptyDir: {}
+  - name: certs
+    hostPath:
+      path: /etc/ssl/certs
+  - name: kubernetes
+    hostPath:
+      path: /etc/kubernetes

@@ -15,6 +15,7 @@ terraform.tfstate
 secrets.env
 secrets/
 environments/dev.tfvars
-kube/
+environments/play-*.tfvars
 .terraform
+resources/
 TODO

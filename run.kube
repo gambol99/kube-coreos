@@ -1,39 +1,49 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-WORKDIR="/kube-coreos"
+WORKDIR="/platform"
 KUBE_IMAGE=${KUBE_IMAGE:="docker.io/gambol99/kube-coreos"}
 KUBE_TAG=${KUBE_TAG:-"latest"}
+PGFILE="environments/play-${USER}.tfvars"
+PGDEFAULT="environments/play.tfvars"
+PGUSER="play-${USER}"
 PLATFORM_ENV=${PLATFORM_ENV:-""}
 DOCKER=`which docker`
 NC='\e[0m'
 YELLOW='\e[0;33m'
+RED='\e[0;31m'
 
 usage() {
   cat <<EOF
-  Usage: $(basename $0) -e <ENVIRONMENT>
-    -e|--env ENVIRONMENT    : the envirnoment we are running
-    -h|--help               : display this usage menu
+Usage: $(basename $0) -e <ENVIRONMENT>
+  -e|--env ENVIRONMENT    : the envirnoment we are running
+  -h|--help               : display this usage menu
+
 EOF
+  if [[ -n $@ ]]; then
+    failed "$@"
+  fi
 }
 
 annonce() {
-  echo "--> $@"
+  (2>/dev/null echo -e "--> $@")
 }
 
 failed() {
-  echo "[error] $@"
+  (2>/dev/null echo -e "${RED}[error]${NC} $@")
   exit 1
 }
 
 run() {
   /usr/bin/docker run -ti --rm \
     -e CONFIG_AWS_SHARED_CREDENTIALS_FILE=/root/.aws/credentials \
+    -e PLATFORM_ENV \
+    -v ${HOME}/.aws/credentials:/root/.aws/credentials:ro \
     -v ${PWD}/${ENVIRONMENT_FILE}:${WORKDIR}/env.tfvars \
     -v ${PWD}/ca:${WORKDIR}/ca \
-    -v ${PWD}/kube:${WORKDIR}/kubernetes \
-    -v ${PWD}/terraform:${WORKDIR}/terraform \
-    -v ${HOME}/.aws/credentials:/root/.aws/credentials:ro \
+    -v ${PWD}/resources:${WORKDIR}/kubernetes \
     -v ${PWD}/scripts:${WORKDIR}/scripts \
+    -v ${PWD}/scripts/.bashrc:/root/.bashrc \
+    -v ${PWD}/terraform:${WORKDIR}/terraform \
     ${KUBE_IMAGE}:${KUBE_TAG}
 }
 
@@ -48,11 +58,21 @@ while [ $# -gt 0 ]; do
   esac
 done
 
+# step: playground is special, lets copy the playground config for this user
+if [[ $PLATFORM_ENV == "play" ]]; then
+  if [[ ! -f "${PGFILE}" ]]; then
+    annonce "copying the default playground file: ${_default} to: ${PGFILE}"
+    cp ${PGDEFAULT} ${PGFILE}              || failed "unable to copy the default playground file: ${PGDEFAULT}"
+    sed -i "s/PLATFORM_ENV/${USER}/g" ${PGFILE} || failed "unable to update the username in file: ${PGFILE}"
+  fi
+  export PLATFORM_ENV=${PGUSER}
+fi
+
 # step: check the docker container exists
 ENVIRONMENT_FILE="./environments/${PLATFORM_ENV}.tfvars"
 
-[ -z "${PLATFORM_ENV}"     ] && failed "you need to specify the environment, either -e or set PLATFORM_ENV environment, this references the file environments/<PLATFORM_ENV>.tfvars"
-[ -f "${ENVIRONMENT_FILE}" ] || failed "the environment file ${ENVIRONMENT_FILE} does not exist"
+[ -z "${PLATFORM_ENV}"     ] && usage "you have not specified an envirnoment (either -e or set PLATFORM_ENV envirnoment variable)"
+[ -f "${ENVIRONMENT_FILE}" ] || usage "the environment file: '${YELLOW}${ENVIRONMENT_FILE}${NC}' does not exist"
 
 echo -e "--> Running Platform, with environment: ${YELLOW}${PLATFORM_ENV}${NC}"
 
