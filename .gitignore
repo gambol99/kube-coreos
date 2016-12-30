@@ -16,6 +16,7 @@ secrets.env
 secrets/
 environments/dev.tfvars
 environments/play-*.tfvars
+environments/staging.tfvars
 .terraform
 resources/
 TODO
