@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 WORKDIR="/platform"
-KUBE_IMAGE=${KUBE_IMAGE:="docker.io/gambol99/kube-coreos"}
+KUBE_IMAGE=${KUBE_IMAGE:="quay.io/gambol99/kube-coreos"}
 KUBE_TAG=${KUBE_TAG:-"latest"}
 PGFILE="environments/play-${USER}.tfvars"
 PGDEFAULT="environments/play.tfvars"
