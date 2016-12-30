@@ -1,0 +1,80 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: kube-addons
+  namespace: kube-system
+spec:
+  hostNetwork: true
+  containers:
+  - name: addons
+    image: ${kmsctl_image}
+    args:
+    - --region=${aws_region}
+    - get
+    - --output-dir=/etc/kubernetes
+    - --bucket=${secrets_bucket_name}
+    - --sync=true
+    - --flatten=false
+    - --sync-interval=2m
+    - --recursive=true
+    - addons/kubedns
+    resources:
+      limits:
+        cpu: 200m
+        memory: 300Mi
+    volumeMounts:
+    - name: kubernetes
+      mountPath: /etc/kubernetes
+    - name: certs
+      mountPath: /etc/ssl/certs
+  - name: secrets
+    image: ${kmsctl_image}
+    args:
+    - --region=${aws_region}
+    - get
+    - --output-dir=/etc/secrets
+    - --bucket=${secrets_bucket_name}
+    - --sync=true
+    - --sync-interval=1h
+    - --recursive=true
+    - secure/kubeconfig_admin
+    resources:
+      limits:
+        cpu: 200m
+        memory: 300Mi
+    volumeMounts:
+    - name: secrets
+      mountPath: /etc/secrets
+    - name: certs
+      mountPath: /etc/ssl/certs
+  - name: kube-watch
+    image: quay.io/gambol99/kubelet-watch:latest
+    args:
+    - --directory
+    - /etc/kubernetes/addons
+    - --server
+    - https://127.0.0.1:6443
+    - --config
+    - /etc/secrets/kubeconfig_admin
+    resources:
+      limits:
+        cpu: 200m
+        memory: 300Mi
+    volumeMounts:
+    - name: secrets
+      mountPath: /etc/secrets
+    - name: certs
+      mountPath: /etc/ssl/certs
+    - name: kubernetes
+      mountPath: /etc/kubernetes
+  volumes:
+  - name: secrets
+    emptyDir: {}
+  - name: certs
+    hostPath:
+      path: /etc/ssl/certs
+      readOnly: true
+  - name: kubernetes
+    hostPath:
+      path: /etc/kubernetes
+      readOnly: false

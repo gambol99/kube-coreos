@@ -11,14 +11,18 @@ upload_secrets() {
     for _file in */**; do
       # step: we dont need to push the manifests
       [[ "${_file}" =~ ^manifests.*$ ]] && continue
-      kmsctl put --bucket ${CONFIG_SECRET_BUCKET_NAME} --kms ${CONFIG_AWS_KMS_ID} ${_file}
+      kmsctl put --bucket ${CONFIG_SECRET_BUCKET_NAME} --kms ${CONFIG_AWS_KMS_ID} ${_file} || while read line; do
+        annonce ${line}
+      done
     done
   )
 }
 
 fetch_secrets() {
   annonce "Fetching the secrets to the s3 bucket: ${CONFIG_SECRET_BUCKET_NAME}"
-  kmsctl get --bucket ${CONFIG_SECRET_BUCKET_NAME} --flatten=false -d=${SECRETS_DIR} --recursive /
+  kmsctl get --bucket ${CONFIG_SECRET_BUCKET_NAME} --flatten=false -d=${SECRETS_DIR} --recursive / || while read line; do
+    annonce ${line}
+  done
   setup_secrets
 }
 
