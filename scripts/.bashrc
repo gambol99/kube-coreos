@@ -8,6 +8,13 @@ source ${WORKDIR}/scripts/environment.sh
 
 export PS1="[${PLATFORM_ENV}@\W]$ "
 
+# source in autocompletion
+if [[ -f "/etc/profile.d/bash_completion.sh" ]]; then
+  source /etc/profile.d/bash_completion.sh
+fi
+# source in kubectl completion
+source <(kubectl completion bash)
+
 ## Aliases
 alias vim="vi"
 alias ll="ls -l"
