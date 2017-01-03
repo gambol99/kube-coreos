@@ -8,7 +8,7 @@ coreos:
     command: restart
   - name: fleet.service
     enable: false
-  - name: etcd2
+  - name: etcd2.service
     enable: false
     command: stop
   - name: update-engine.service

@@ -16,11 +16,12 @@ resource "aws_vpc" "vpc" {
 
 ## DHCP Options for VPC
 resource "aws_vpc_dhcp_options" "default" {
-  domain_name         = "${var.private_zone_name}"
+  domain_name         = "${var.aws_region}.compute.internal"
   domain_name_servers = [ "AmazonProvidedDNS" ]
   tags {
     Name = "${var.environment}-dhcp-options"
     Env  = "${var.environment}"
+    Role = "dhcp"
   }
 }
 

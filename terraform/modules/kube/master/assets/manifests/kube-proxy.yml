@@ -7,12 +7,12 @@ spec:
   hostNetwork: true
   containers:
   - name: secrets
-    image: ${kmsctl_image}
+    image: {{ .kmsctl_image }}
     args:
-    - --region=${aws_region}
+    - --region={{ .aws_region }}
     - get
     - --output-dir=/etc/secrets
-    - --bucket=${secrets_bucket_name}
+    - --bucket={{ .secrets_bucket_name }}
     - --sync=true
     - --recursive=true
     - common/kubeconfig_proxy
@@ -27,15 +27,15 @@ spec:
     - name: secrets
       mountPath: /etc/secrets
   - name: kube-proxy
-    image: ${kubernetes_image}
+    image: {{ .kubernetes_image }}
     command:
     - /hyperkube
     - proxy
+    - --cluster-cidr={{ .flannel_cidr }}
     - --kubeconfig=/etc/secrets/kubeconfig_proxy
     - --logtostderr=true
-    - --master=https://${kubeapi_dns_name}
+    - --master=https://{{ .kubeapi_dns_name }}
     - --proxy-mode=iptables
-    - --logtostderr=true
     securityContext:
       privileged: true
     livenessProbe:
@@ -47,10 +47,8 @@ spec:
       timeoutSeconds: 15
     resources:
       requests:
-        cpu: 50m
         memory: 50Mi
       limits:
-        cpu: 2000m
         memory: 8000Mi
     volumeMounts:
     - name: certs

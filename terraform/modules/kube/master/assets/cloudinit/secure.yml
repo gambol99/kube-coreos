@@ -3,7 +3,7 @@
 coreos:
   flannel:
     interface: $private_ipv4
-    etcd_endpoints: "${flannel_memberlist}"
+    etcd_endpoints: "{{ .flannel_memberlist }}"
     etcd_certfile: /run/flannel/etcd-proxy.pem
     etcd_keyfile: /run/flannel/etcd-proxy-key.pem
     etcd_cafile: /etc/ssl/etcd/platform_ca.pem
@@ -11,7 +11,7 @@ coreos:
     data-dir: /var/lib/etcd2
     initial-cluster-state: new
     initial-cluster-token: etcd-dsp-cluster
-    initial-cluster: "${etcd_memberlist}"
+    initial-cluster: "{{ .etcd_memberlist }}"
     cert-file: /run/etcd2/etcd.pem
     key-file: /run/etcd2/etcd-key.pem
     peer-cert-file: /run/etcd2/etcd.pem
@@ -85,13 +85,13 @@ coreos:
       [Unit]
       Description=Smilodon - manage ebs+eni attachment
       [Service]
-      Environment="URL=${smilodon_release_url}"
+      Environment="URL={{ .smilodon_release_url }}"
       Environment="OUTPUT_FILE=/opt/bin/smilodon"
-      Environment="MD5SUM=${smilodon_release_md5}"
+      Environment="MD5SUM={{ .smilodon_release_md5 }}"
       EnvironmentFile=/etc/aws-environment
       ExecStartPre=/usr/bin/mkdir -p /opt/bin
-      ExecStartPre=/usr/bin/bash -c 'until [[ -x $${OUTPUT_FILE} ]] && [[ $$(md5sum $${OUTPUT_FILE} | cut -f1 -d" ") == $${MD5SUM} ]]; do wget -q -O $${OUTPUT_FILE} $${URL} && chmod +x $${OUTPUT_FILE}; done'
-      ExecStart=/opt/bin/smilodon --filters=tag:Env=$${ENVIRONMENT}
+      ExecStartPre=/usr/bin/bash -c 'until [[ -x ${OUTPUT_FILE} ]] && [[ $(md5sum ${OUTPUT_FILE} | cut -f1 -d" ") == ${MD5SUM} ]]; do wget -q -O ${OUTPUT_FILE} ${URL} && chmod +x ${OUTPUT_FILE}; done'
+      ExecStart=/opt/bin/smilodon --filters=tag:Env=${ENVIRONMENT}
       Restart=always
       RestartSec=10
       TimeoutStartSec=300
@@ -124,6 +124,14 @@ coreos:
       content: |
         [Service]
         Environment="DOCKER_OPTS=--iptables=false --log-opt max-size=100m --log-opt max-file=1 --default-ulimit=nofile=32768:32768 --default-ulimit=nproc=16384:16384"
+    {{ if .enable_calico -}}
+    - name: 40-flannel.conf
+      content: |
+        [Unit]
+        Requires=flanneld.service
+        After=flanneld.service
+        [Service]
+        ExecStartPre=/usr/bin/cp /run/flannel_docker_opts.env /etc/kubernetes/cni/docker_opts_cni.env{{ end }}
   - name: etcd2.service
     command: start
     enable: true
@@ -143,11 +151,11 @@ coreos:
         ExecStartPre=/opt/bin/kmsctl get --output-dir %t/etcd2 --recursive=true secure/etcd
         ExecStartPre=/usr/bin/chown -R etcd:etcd /var/lib/etcd2 %t/etcd2
         ExecStart=
-        ExecStart=/usr/bin/etcd2 --name=node$${NODE_ID} \
-          --initial-advertise-peer-urls=https://$${NODE_IP}:2380 \
-          --listen-peer-urls=https://$${NODE_IP}:2380 \
-          --listen-client-urls=https://$${NODE_IP}:2379,https://127.0.0.1:2379 \
-          --advertise-client-urls=https://$${NODE_IP}:2379
+        ExecStart=/usr/bin/etcd2 --name=node${NODE_ID} \
+          --initial-advertise-peer-urls=https://${NODE_IP}:2380 \
+          --listen-peer-urls=https://${NODE_IP}:2380 \
+          --listen-client-urls=https://${NODE_IP}:2379,https://127.0.0.1:2379 \
+          --advertise-client-urls=https://${NODE_IP}:2379
   - name: flanneld.service
     command: start
     enable: true
@@ -167,26 +175,24 @@ coreos:
         [Service]
         EnvironmentFile="/run/flannel/options.env"
 
-        ExecStartPre=/usr/bin/etcdctl --peers $${FLANNELD_ETCD_ENDPOINTS} set /coreos.com/network/config '{"Network":"${flannel_cidr}","Backend":{"Type":"vxlan"}}'
+        ExecStartPre=/usr/bin/etcdctl --peers ${FLANNELD_ETCD_ENDPOINTS} set /coreos.com/network/config '{"Network":"{{ .flannel_cidr }}","Backend":{"Type":"vxlan"}}'
   - name: install-kmsctl.service
     command: start
     content: |
       [Unit]
       Description=Install kmsctl
       Documentation=https://github.com/gambol99/kmsctl
-      Before=etcd2.service
 
       [Service]
       Type=notify
       NotifyAccess=all
       RemainAfterExit=yes
       TimeoutStartSec=180
-      Environment="URL=${kmsctl_release_url}"
-      Environment="FILEN=/opt/bin/kmsctl"
-      Environment="MD5SUM=${kmsctl_release_md5}"
+      Environment="URL={{ .kmsctl_release_url }}"
+      Environment="FILE=/opt/bin/kmsctl"
+      Environment="MD5SUM={{ .kmsctl_release_md5 }}"
       ExecStartPre=/usr/bin/mkdir -p /opt/bin
-      ExecStartPre=-/usr/bin/rm -f /opt/bin/kmsctl /opt/bin/kmsctl.gz
-      ExecStartPre=/usr/bin/bash -c 'until [[ -x $${FILEN} ]] && [[ $(md5sum $${FILEN} | cut -f1 -d" ") == $${MD5SUM} ]]; do wget -q -O $${FILEN}.gz $${URL} && gunzip $${FILEN}.gz && chmod +x $${FILEN}; done'
+      ExecStartPre=/usr/bin/bash -c 'until [[ -x ${FILE} ]] && [[ $(md5sum ${FILE} | cut -f1 -d" ") == ${MD5SUM} ]]; do wget -q -O ${FILE}.gz ${URL} && gunzip ${FILE}.gz && chmod +x ${FILE}; done'
       ExecStart=/usr/bin/systemd-notify --ready --status="succussfully downloaded the kmsctl"
   - name: update-ca-certificates.service
     command: start
@@ -224,10 +230,11 @@ coreos:
       RestartSec=10
       RuntimeDirectory=kubelet
       RuntimeDirectoryMode=0700
-      Environment=KUBELET_VERSION=${kubernetes_version}
-      Environment=KUBELET_ACI=${kubernetes_image}
+      Environment=KUBELET_VERSION={{ .kubernetes_version }}
+      Environment=KUBELET_ACI={{ .kubernetes_image }}
       EnvironmentFile=/etc/environment
-      Environment="RKT_OPTS=--volume dns,kind=host,source=/etc/resolv.conf \
+      Environment="RKT_OPTS=--uuid-file-save=/var/run/kubelet-pod.uuid \
+        --volume dns,kind=host,source=/etc/resolv.conf \
         --mount volume=dns,target=/etc/resolv.conf \
         --volume=etc-ssl-certs,kind=host,source=/etc/ssl/certs \
         --mount volume=etc-ssl-certs,target=/etc/ssl/certs \
@@ -236,12 +243,14 @@ coreos:
         --volume stage,kind=host,source=/tmp \
         --mount volume=stage,target=/tmp \
         --volume var-log,kind=host,source=/var/log \
-        --mount volume=var-log,target=/var/log"
+        --mount volume=var-log,target=/var/log \
+        --volume cni-bin,kind=host,source=/opt/cni/bin \
+        --mount volume=cni-bin,target=/opt/cni/bin"
 
       ExecStartPre=/usr/sbin/modprobe br_netfilter
       ExecStartPre=/usr/bin/systemctl --quiet is-active update-ca-certificates.service
       ExecStartPre=/usr/bin/systemctl --quiet is-active flanneld.service
-      ExecStartPre=/bin/mkdir -p /etc/kubernetes/manifests
+      ExecStartPre=/bin/mkdir -p /etc/kubernetes/manifests /opt/cni/bin
       ExecStart=/usr/lib/coreos/kubelet-wrapper \
         --address=0.0.0.0 \
         --allow-privileged=true \
@@ -250,17 +259,24 @@ coreos:
         --cloud-provider=aws \
         --cluster-dns=10.200.0.10 \
         --cluster-domain=cluster.local \
+        {{ if .enable_calico -}}
+        --cni-conf-dir=/etc/kubernetes/cni/net.d \{{ end }}
         --cpu-cfs-quota=true \
         --host-network-sources=* \
-        --hostname-override=$${COREOS_PRIVATE_IPV4} \
+        --hostname-override=${COREOS_PRIVATE_IPV4} \
         --image-gc-high-threshold=60 \
         --image-gc-low-threshold=40 \
         --logtostderr=true \
         --maximum-dead-containers-per-container=1 \
         --maximum-dead-containers=10 \
+        {{ if .enable_calico -}}
+        --network-plugin=cni \{{ end }}
+        --node-labels="role=master" \
         --pod-manifest-path=/etc/kubernetes/manifests \
         --register-schedulable=false \
         --system-reserved=cpu=50m,memory=100Mi
+
+      ExecStop=-/usr/bin/rkt stop --uuid-file=/var/run/kubelet-pod.uuid
 write_files:
 - path: /etc/kubernetes/cloud.cfg
   permissions: 0444
@@ -269,15 +285,28 @@ write_files:
     [Global]
     KubernetesClusterTag = "${environment}"
     DisableSecurityGroupIngress = true
+{{ if .enable_calico -}}
+- path: /etc/kubernetes/cni/net.d/10-flannel.conf
+  permissions: 0444
+  owner: root
+  content: |
+    {
+      "name": "podnet",
+      "type": "flannel",
+      "delegate": {
+        "isDefaultGateway": true
+      }
+    }{{ end }}
 - path: /etc/kmsctl
   content: |
-    AWS_S3_BUCKET=${secrets_bucket_name}
-    AWS_DEFAULT_REGION=${aws_region}
+    AWS_S3_BUCKET={{ .secrets_bucket_name }}
+    AWS_DEFAULT_REGION={{ .aws_region }}
 - path: /etc/aws-environment
+  permissions: 0444
   content: |
-    AWS_REGION=${aws_region}
-    DNS_ZONE_NAME=${private_zone_name}
-    ENVIRONMENT=${environment}
+    AWS_REGION={{ .aws_region }}
+    DNS_ZONE_NAME={{ .private_zone_name }}
+    ENVIRONMENT={{ .environment }}
 - path: /etc/kubernetes/manifests/kube-manifests.yaml
   permissions: 0444
   owner: root
@@ -291,12 +320,12 @@ write_files:
       hostNetwork: true
       containers:
       - name: manifests
-        image: ${kmsctl_image}
+        image: {{ .kmsctl_image }}
         args:
-        - --region=${aws_region}
+        - --region={{ .aws_region }}
         - get
         - --output-dir=/etc/kubernetes/manifests
-        - --bucket=${secrets_bucket_name}
+        - --bucket={{ .secrets_bucket_name }}
         - --sync=true
         - --recursive=true
         - manifests/secure

@@ -46,13 +46,13 @@ case "${COMMAND}" in
   plan)
     shift
     (
-      cd ${PROVIDER_DIR} && $TERRAFORM get -update=true &&
+      cd ${PROVIDER_DIR} && $TERRAFORM get &&
       $TERRAFORM ${COMMAND} ${TERRAFORM_OPTIONS} -module-depth=-1 ${TERRAFORM_VAR_FILES} $@
     ) || { error "unable to complete terraform operation"; RET=1; }
     ;;
   get)
     (
-      cd ${PROVIDER_DIR} && $TERRAFORM get -update=true
+      cd ${PROVIDER_DIR} && $TERRAFORM get
     ) || failed "unable to complete terraform operation"
     ;;
   show|graph|taint|output)

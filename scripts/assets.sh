@@ -13,7 +13,7 @@ ETCD_CSR_PROXY="${SECRETS_DIR}/common/etcd-proxy-csr.json"
 KUBEAPI_CERT_KEY="${SECRETS_DIR}/secure/kubeapi-key.pem"
 KUBEAPI_CERT="${SECRETS_DIR}/secure/kubeapi.pem"
 KUBEAPI_CSR="${SECRETS_DIR}/secure/kubeapi-csr.json"
-ETCD_HOSTS="$(hcltool ${ENVIRONMENT_FILE} | jq -r '[.secure_nodes[]] | join(",")')"
+ETCD_HOSTS="$(hcltool ${ENVIRONMENT_FILE} 2>/dev/null | jq -r '[.secure_nodes[]] | join(",")')"
 ETCD_CERT_KEY="${SECRETS_DIR}/secure/etcd-key.pem"
 ETCD_CERT="${SECRETS_DIR}/secure/etcd.pem"
 ETCD_PROXY_CERT_KEY="${SECRETS_DIR}/common/etcd-proxy-key.pem"
@@ -85,7 +85,7 @@ create_certificates() {
 
   if [[ ! -f "${KUBEAPI_CERT}" ]]; then
     annonce "Generating the KubeAPI certificates"
-    cfssl gencert -ca=${PLATFORM_CA} -ca-key=${PLATFORM_CA_KEY} -hostname=localhost,127.0.0.1,10.200.0.1,kube.${CONFIG_DNS_ZONE_NAME},kube.${CONFIG_PRIVATE_ZONE_NAME} \
+    cfssl gencert -ca=${PLATFORM_CA} -ca-key=${PLATFORM_CA_KEY} -hostname=localhost,127.0.0.1,10.200.0.1,kubernetes.default,kubernetes,kube.${CONFIG_DNS_ZONE_NAME} \
       -config=ca/ca-config.json -profile=server ${KUBEAPI_CSR} | cfssljson -bare ${SECRETS_DIR}/secure/kubeapi >/dev/null || failed "unable to generate the kubeapi certificate"
   fi
 }
@@ -139,8 +139,9 @@ create_kubernetes_auth_policy() {
 { "apiVersion": "abac.authorization.kubernetes.io/v1beta1", "kind": "Policy", "spec": { "user":"controller", "namespace": "*", "resource": "*", "apiGroup": "*" }}
 { "apiVersion": "abac.authorization.kubernetes.io/v1beta1", "kind": "Policy", "spec": { "user":"scheduler", "namespace": "*", "resource": "*", "apiGroup": "*" }}
 { "apiVersion": "abac.authorization.kubernetes.io/v1beta1", "kind": "Policy", "spec": { "user":"kubelet", "namespace": "*", "resource": "*", "apiGroup": "*" }}
-{ "apiVersion": "abac.authorization.kubernetes.io/v1beta1", "kind": "Policy", "spec": { "user":"proxy", "namespace": "*", "resource": "*", "apiGroup": "*", "readonly": true }}
+{ "apiVersion": "abac.authorization.kubernetes.io/v1beta1", "kind": "Policy", "spec": { "user":"proxy", "namespace": "*", "resource": "*", "apiGroup": "*" }}
 { "apiVersion": "abac.authorization.kubernetes.io/v1beta1", "kind": "Policy", "spec": { "user":"system:serviceaccount:kube-system:kubedns","namespace":"*","resource":"*","apiGroup":"*", "readonly": true}}
+{ "apiVersion": "abac.authorization.kubernetes.io/v1beta1", "kind": "Policy", "spec": { "user":"system:serviceaccount:kube-system:calico","namespace":"*","resource":"*","apiGroup":"*", "readonly": true}}
 EOF
   fi
 }
