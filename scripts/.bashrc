@@ -3,15 +3,14 @@
 #  vim:ts=2:sw=2:et
 #
 export WORKDIR=/platform
+export PS1="[${PLATFORM_ENV}@\W]$ "
 
 source ${WORKDIR}/scripts/environment.sh
 
-export PS1="[${PLATFORM_ENV}@\W]$ "
-
 # source in autocompletion
-if [[ -f "/etc/profile.d/bash_completion.sh" ]]; then
-  source /etc/profile.d/bash_completion.sh
-fi
+[[ -f "/etc/profile.d/bash_completion.sh" ]] && source "/etc/profile.d/bash_completion.sh"
+[[ -f "${WORKDIR}/scripts/environment.sh" ]] && source "${WORKDIR}/scripts/environment.sh"
+
 # source in kubectl completion
 source <(kubectl completion bash)
 
@@ -71,27 +70,27 @@ aws-terminate() {
 }
 
 terminate-compute() {
-  terminate_layer "compute"
+  terminate-layer "compute"
 }
 
 terminate-masters() {
   terminate-layer "secure"
 }
 
-terminate_layer() {
+terminate-layer() {
   local layer="$1"
-  echo -n "Are you sure you wish to terminate compute boxes? (y/n) "
+  echo -n "Are you sure you wish to terminate ${1} boxes? (y/n) "
   read choice
   if [[ "${choice}" =~ ^[Yy]$ ]]; then
     aws ec2 describe-instances \
       --filter "Name=instance-state-name,Values=running" \
       --query 'Reservations[].Instances[].[ [Tags[?Key==`Name`].Value][0][0],InstanceId ]' \
-      --output text | awk "/${layer}/ { print \$2 }" | while read compute; do
-      echo -n "Terminating the compute box: ${compute}"
+      --output text | awk "/${layer}/ { print \$1,\$2 }" | while read name id; do
+      echo -n "terminating instance: ${name} (${id})"
       if aws-terminate ${compute} >/dev/null 2>/dev/null; then
-        printf "%20s" "${YELLOW}[OK]${NC}"
+        echo -e "${YELLOW}[OK]${NC}"
       else
-        printf "%20s" "${RED}[OK]${NC}"
+        echo -e "${RED}[FAILED]${NC}"
       fi
     done
   fi

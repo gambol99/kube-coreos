@@ -1,6 +1,4 @@
 
-output "aws_profile"             { value = "${var.aws_profile}" }
-output "aws_region"              { value = "${var.aws_region}" }
 output "compute_sg"              { value = "${aws_security_group.compute.id}" }
 output "elb_sg"                  { value = "${aws_security_group.elb.id}" }
 output "key_name"                { value = "${aws_key_pair.default.key_name}" }

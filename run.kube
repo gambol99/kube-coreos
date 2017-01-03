@@ -1,13 +1,15 @@
 #!/usr/bin/env bash
 
 WORKDIR="/platform"
-KUBE_IMAGE=${KUBE_IMAGE:="quay.io/gambol99/kube-coreos"}
-KUBE_TAG=${KUBE_TAG:-"latest"}
-PGFILE="environments/play-${USER}.tfvars"
-PGDEFAULT="environments/play.tfvars"
-PGUSER="play-${USER}"
+AWS_SHARED_CREDENTIALS_FILE=${AWS_SHARED_CREDENTIALS_FILE:-"${HOME}/.aws/credentials"}
+ENVIRONMENTS_DIR="environments"
+PLATFORM_IMAGE=${PLATFORM_IMAGE:="quay.io/gambol99/kube-coreos"}
+PLATFORM_VERSION=${PLATFORM_VERSION:-"latest"}
+PLAYGROUND_DEFAULT="${ENVIRONMENTS_DIR}/play.tfvars"
+PLAYGROUND_ENV="play-${USER}"
+PLAYGROUND_FILE="${ENVIRONMENTS_DIR}/play-${USER}.tfvars"
+PLAYGROUND_PROFILE=${PLAYGROUND_PROFILE:-"playground"}
 PLATFORM_ENV=${PLATFORM_ENV:-""}
-DOCKER=`which docker`
 NC='\e[0m'
 YELLOW='\e[0;33m'
 RED='\e[0;31m'
@@ -33,21 +35,42 @@ failed() {
   exit 1
 }
 
+# run is responsible for creating the platform container and passing environment
 run() {
+  echo -e "--> Running Platform, with environment: ${YELLOW}${PLATFORM_ENV}${NC}"
+
   /usr/bin/docker run -ti --rm \
-    -e CONFIG_AWS_SHARED_CREDENTIALS_FILE=/root/.aws/credentials \
-    -e PLATFORM_ENV \
-    -v ${HOME}/.aws/credentials:/root/.aws/credentials:ro \
+    -w ${WORKDIR} \
+    -e PLATFORM_ENV="${PLATFORM_ENV}" \
+    -e AWS_ACCESS_KEY_ID="${AWS_ACCESS_KEY_ID}" \
+    -e AWS_DEFAULT_REGION="${AWS_DEFAULT_REGION}" \
+    -e AWS_SECRET_ACCESS_KEY="${AWS_SECRET_ACCESS_KEY}" \
     -v ${PWD}/${ENVIRONMENT_FILE}:${WORKDIR}/env.tfvars \
     -v ${PWD}/ca:${WORKDIR}/ca \
-    -v ${PWD}/resources:${WORKDIR}/kubernetes \
     -v ${PWD}/scripts:${WORKDIR}/scripts \
     -v ${PWD}/scripts/.bashrc:/root/.bashrc \
     -v ${PWD}/terraform:${WORKDIR}/terraform \
-    ${KUBE_IMAGE}:${KUBE_TAG}
+    ${PLATFORM_IMAGE}:${PLATFORM_VERSION}
 }
 
-[ -z "${DOCKER}" ] && failed "unable to find the docker command in your command path"
+# get_credentials is responsible for retrieving the credentials from the file
+get_credentials() {
+  [[ -n "${AWS_ACCESS_KEY_ID}"     ]] || AWS_ACCESS_KEY_ID=$(aws configure --profile ${PLATFORM_ENV} get aws_access_key_id)
+  [[ -n "${AWS_SECRET_ACCESS_KEY}" ]] || AWS_SECRET_ACCESS_KEY=$(aws configure --profile ${PLATFORM_ENV} get aws_secret_access_key)
+  [[ -n "${AWS_DEFAULT_REGION}"    ]] || AWS_DEFAULT_REGION=$(aws configure --profile ${PLATFORM_ENV} get region)
+}
+
+# setup_playground is responsible for prepping a playground environment if required
+setup_playground() {
+  if [[ "${PLATFORM_ENV}" == "play" ]]; then
+    if [[ ! -f "${PLAYGROUND_FILE}" ]]; then
+      annonce "copying the default playground file: ${PLAYGROUND_DEFAULT} to: ${PLAYGROUND_FILE}"
+      cp ${PLAYGROUND_DEFAULT} ${PLAYGROUND_FILE} || failed "unable to copy the default playground file: ${PLAYGROUND_DEFAULT}"
+      sed -i "s/PLATFORM_ENV/${USER}/g" ${PLAYGROUND_FILE} || failed "unable to update the username in file: ${PLAYGROUND_FILE}"
+    fi
+    export PLATFORM_ENV=${PLAYGROUND_ENV}
+  fi
+}
 
 # step: get the command line options
 while [ $# -gt 0 ]; do
@@ -58,22 +81,16 @@ while [ $# -gt 0 ]; do
   esac
 done
 
-# step: playground is special, lets copy the playground config for this user
-if [[ $PLATFORM_ENV == "play" ]]; then
-  if [[ ! -f "${PGFILE}" ]]; then
-    annonce "copying the default playground file: ${_default} to: ${PGFILE}"
-    cp ${PGDEFAULT} ${PGFILE}              || failed "unable to copy the default playground file: ${PGDEFAULT}"
-    sed -i "s/PLATFORM_ENV/${USER}/g" ${PGFILE} || failed "unable to update the username in file: ${PGFILE}"
-  fi
-  export PLATFORM_ENV=${PGUSER}
-fi
+# step: retrieve the credentials
+get_credentials
+# step: 'play' environment is special, lets copy the playground config for this user
+setup_playground
+# step: set the environment file
+ENVIRONMENT_FILE="./${ENVIRONMENTS_DIR}/${PLATFORM_ENV}.tfvars"
 
-# step: check the docker container exists
-ENVIRONMENT_FILE="./environments/${PLATFORM_ENV}.tfvars"
-
-[ -z "${PLATFORM_ENV}"     ] && usage "you have not specified an envirnoment (either -e or set PLATFORM_ENV envirnoment variable)"
-[ -f "${ENVIRONMENT_FILE}" ] || usage "the environment file: '${YELLOW}${ENVIRONMENT_FILE}${NC}' does not exist"
-
-echo -e "--> Running Platform, with environment: ${YELLOW}${PLATFORM_ENV}${NC}"
+[[ -n "${PLATFORM_ENV}"          ]] || usage "you have not specified an envirnoment (either -e or set PLATFORM_ENV envirnoment variable)"
+[[ -f "${ENVIRONMENT_FILE}"      ]] || usage "the environment file: '${YELLOW}${ENVIRONMENT_FILE}${NC}' does not exist"
+[[ -n "${AWS_ACCESS_KEY_ID}"     ]] || usage "unable to retrieve aws access for environment: ${PLATFORM_ENV}"
+[[ -n "${AWS_SECRET_ACCESS_KEY}" ]] || usage "unable to retrieve aws secret key for environment: ${PLATFORM_ENV}"
 
 run

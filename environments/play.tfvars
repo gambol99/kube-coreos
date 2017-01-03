@@ -1,9 +1,6 @@
 #
 # Playground Environment
 #
-aws_profile              = "personal"
-# The aws region we are building in
-aws_region               = "eu-west-1"
 # An public hosted route53 domain for front facing dns
 public_zone_name         = ""
 # An internal domain used for internal elbs
