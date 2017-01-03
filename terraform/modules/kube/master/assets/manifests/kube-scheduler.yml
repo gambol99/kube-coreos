@@ -31,7 +31,7 @@ spec:
     command:
     - /hyperkube
     - scheduler
-    - --master=http://127.0.0.1:8080
+    - --master=https://127.0.0.1:6443
     - --kubeconfig=/etc/secrets/kubeconfig_scheduler
     - --leader-elect=true
     livenessprobe:
