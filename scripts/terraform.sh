@@ -16,12 +16,13 @@ if [ -n "${TERRAFORM_BUCKET}" ]; then
       cd ${PROVIDER_DIR} && \
       terraform remote config \
         --backend=S3 \
-        --backend-config="profile=${CONFIG_AWS_PROFILE}" \
-        --backend-config="shared_credentials_file=/root/.aws/credentials" \
-        --backend-config="region=${CONFIG_AWS_REGION}" \
+        --backend-config="access_key=${AWS_ACCESS_KEY_ID}" \
         --backend-config="bucket=${TERRAFORM_BUCKET}" \
+        --backend-config="encrypt=true" \
         --backend-config="key=${AWS_DEFAULT_REGION}/${ENVIRONMENT}/kube-platform/terraform.tfstate" \
-        --backend-config="encrypt=true"
+        --backend-config="profile=${CONFIG_AWS_PROFILE}" \
+        --backend-config="region=${CONFIG_AWS_REGION}" \
+        --backend-config="secret_key=${AWS_SECRET_ACCESS_KEY}"
     ) || {
       echo "failed to initialize or pull the terraform remote configuration";
       exit 1;

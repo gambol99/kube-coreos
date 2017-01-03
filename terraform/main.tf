@@ -3,7 +3,6 @@
 module "platform" {
   source                   = "modules/platform"
 
-  aws_profile              = "${var.aws_profile}"
   aws_region               = "${var.aws_region}"
   compute_subnets          = "${var.compute_subnets}"
   elb_subnets              = "${var.elb_subnets}"
@@ -42,8 +41,7 @@ module "master" {
   secure_nodes_info        = "${var.secure_nodes_info}"
   secure_root_volume       = "${var.secure_root_volume}"
 
-  aws_profile              = "${module.platform.aws_profile}"
-  aws_region               = "${module.platform.aws_region}"
+  aws_region               = "${var.aws_region}"
   compute_sg               = "${module.platform.compute_sg}"
   compute_subnets          = "${module.platform.compute_subnets}"
   elb_sg                   = "${module.platform.elb_sg}"
@@ -72,8 +70,7 @@ module "api" {
   public_zone_name         = "${var.public_zone_name}"
   secure_asg               = "${module.master.secure_asg}"
 
-  aws_profile              = "${module.platform.aws_profile}"
-  aws_region               = "${module.platform.aws_region}"
+  aws_region               = "${var.aws_region}"
   compute_sg               = "${module.platform.compute_sg}"
   compute_subnets          = "${module.platform.compute_subnets}"
   elb_sg                   = "${module.platform.elb_sg}"
@@ -108,8 +105,7 @@ module "compute" {
   public_zone_name           = "${var.public_zone_name}"
   secrets_bucket_name        = "${var.secrets_bucket_name}"
 
-  aws_profile                = "${module.platform.aws_profile}"
-  aws_region                 = "${module.platform.aws_region}"
+  aws_region                 = "${var.aws_region}"
   compute_sg                 = "${module.platform.compute_sg}"
   compute_subnets            = "${module.platform.compute_subnets}"
   elb_sg                     = "${module.platform.elb_sg}"
@@ -126,6 +122,9 @@ module "compute" {
   vpc_id                     = "${module.platform.vpc_id}"
 }
 
+#
+## Outputs
+#
 output "kubeapi_public"        { value = "${module.api.kubeapi_dns}" }
 output "kubeapi_public_elb"    { value = "${module.api.kubeapi_dns_aws}"}
 output "public_name_services"  { value = [ "${module.platform.public_nameservers}" ] }
