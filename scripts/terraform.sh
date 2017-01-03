@@ -20,7 +20,7 @@ if [ -n "${TERRAFORM_BUCKET}" ]; then
         --backend-config="bucket=${TERRAFORM_BUCKET}" \
         --backend-config="encrypt=true" \
         --backend-config="key=${AWS_DEFAULT_REGION}/${ENVIRONMENT}/kube-platform/terraform.tfstate" \
-        --backend-config="profile=${CONFIG_AWS_PROFILE}" \
+        --backend-config="region=${AWS_DEFAULT_REGION}" \
         --backend-config="region=${CONFIG_AWS_REGION}" \
         --backend-config="secret_key=${AWS_SECRET_ACCESS_KEY}"
     ) || {
