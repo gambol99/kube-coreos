@@ -1,22 +1,25 @@
 #
 # Playground Environment
 #
-# An public hosted route53 domain for front facing dns
+
+# REQUIRED: An public hosted route53 domain for front facing dns
 public_zone_name         = ""
 # An internal domain used for internal elbs
 private_zone_name        = "PLATFORM_ENV.dsp.io"
 # The environment name
 environment              = "play-PLATFORM_ENV"
-# You have to create a KMS key and place the KeyID here
+# REQUIRED: You have to create a KMS key and place the KeyID here
 kms_master_id            = ""
 # The external dns name of the kube api
 kubeapi_dns              = "kube-PLATFORM_ENV"
 # The name of the s3 bucket we will use to store secrets
 secrets_bucket_name      = "dev-io-secrets-PLATFORM_ENV"
-# This bucket has to be create before hand
+# REQUIRED: is bucket has to be create before hand
 terraform_bucket_name    = "dev-io-terraform-PLATFORM_ENV"
 # The VPC subnet
 vpc_cidr                 = "10.80.0.0/16"
+# Enable the calico network policy manager
+enable_calico            = false
 # The addresses permitted to access the kubeapi
 kubeapi_access_list = [
   "0.0.0.0/0"

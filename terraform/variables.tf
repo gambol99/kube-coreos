@@ -40,6 +40,10 @@ variable "etcd_dns" {
   description = "The dns name of the internal etcd elb"
   default     = "etcd"
 }
+variable "enable_calico" {
+  description = "Whether to enable the calico network security policy"
+  default     = true
+}
 
 ## AWS PROVIDER ##
 variable "aws_region" {

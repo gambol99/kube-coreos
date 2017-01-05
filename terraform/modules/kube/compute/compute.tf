@@ -2,18 +2,19 @@
 ## Kuberneres Compute Layer Resources
 #
 
-## Compute Node Instance Profile
+## Instance Profile
 resource "aws_iam_instance_profile" "compute" {
   name  = "${var.environment}-compute"
   roles = [ "${aws_iam_role.compute.name}" ]
 }
 
-## Compute UserData Template
-data "template_file" "compute_user_data" {
+## UserData Template
+data "gotemplate_file" "compute_user_data" {
   template = "${file("${path.module}/assets/cloudinit/compute.yml")}"
 
   vars = {
     aws_region             = "${var.aws_region}"
+    enable_calico          = "${var.enable_calico}"
     environment            = "${var.environment}"
     flannel_memberlist     = "${var.flannel_memberlist}"
     kmsctl_image           = "${var.kmsctl_image}"
@@ -28,7 +29,7 @@ data "template_file" "compute_user_data" {
   }
 }
 
-## Compute Launch Configuration
+## Launch Configuration
 resource "aws_launch_configuration" "compute" {
   associate_public_ip_address = false
   enable_monitoring           = false
@@ -38,7 +39,7 @@ resource "aws_launch_configuration" "compute" {
   key_name                    = "${var.key_name}"
   name_prefix                 = "${var.environment}-compute-"
   security_groups             = [ "${var.compute_sg}" ]
-  user_data                   = "${data.template_file.compute_user_data.rendered}"
+  user_data                   = "${data.gotemplate_file.compute_user_data.rendered}"
 
   lifecycle {
     create_before_destroy = true
@@ -58,6 +59,7 @@ resource "aws_launch_configuration" "compute" {
   }
 }
 
+# AutoScaling Group
 resource "aws_autoscaling_group" "compute" {
   default_cooldown          = "${var.compute_asg_grace_period}"
   force_delete              = true

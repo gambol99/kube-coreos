@@ -7,33 +7,33 @@ spec:
   hostNetwork: true
   containers:
   - name: secrets
-    image: ${kmsctl_image}
+    image: {{ .kmsctl_image }}
     args:
-    - --region=${aws_region}
+    - --region={{ .aws_region }}
     - get
     - --output-dir=/etc/secrets
-    - --bucket=${secrets_bucket_name}
+    - --bucket={{ .secrets_bucket_name }}
     - --sync=true
     - --sync-interval=10m
     - secure/kubeconfig_scheduler
     resources:
       requests:
-        cpu: 50m
         memory: 50Mi
       limits:
-        cpu: 200m
         memory: 800Mi
     volumeMounts:
     - name: secrets
       mountPath: /etc/secrets
   - name: scheduler
-    image: ${kubernetes_image}
+    image: {{ .kubernetes_image }}
     command:
     - /hyperkube
     - scheduler
-    - --master=https://127.0.0.1:6443
     - --kubeconfig=/etc/secrets/kubeconfig_scheduler
     - --leader-elect=true
+    - --logtostderr=true
+    - --master=https://127.0.0.1:6443
+    - --v=10
     livenessprobe:
       httpGet:
         host: 127.0.0.1
@@ -43,10 +43,8 @@ spec:
       timeoutSeconds: 15
     resources:
       requests:
-        cpu: 50m
         memory: 50Mi
       limits:
-        cpu: 2000m
         memory: 8000Mi
     volumeMounts:
     - name: secrets

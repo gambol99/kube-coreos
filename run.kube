@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
 
-WORKDIR="/platform"
-AWS_SHARED_CREDENTIALS_FILE=${AWS_SHARED_CREDENTIALS_FILE:-"${HOME}/.aws/credentials"}
 ENVIRONMENTS_DIR="environments"
+GIT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+PLATFORM_ENV=${PLATFORM_ENV:-""}
 PLATFORM_IMAGE=${PLATFORM_IMAGE:="quay.io/gambol99/kube-coreos"}
 PLATFORM_VERSION=${PLATFORM_VERSION:-"latest"}
 PLAYGROUND_DEFAULT="${ENVIRONMENTS_DIR}/play.tfvars"
 PLAYGROUND_ENV="play-${USER}"
 PLAYGROUND_FILE="${ENVIRONMENTS_DIR}/play-${USER}.tfvars"
 PLAYGROUND_PROFILE=${PLAYGROUND_PROFILE:-"playground"}
-PLATFORM_ENV=${PLATFORM_ENV:-""}
+WORKDIR="/platform"
 NC='\e[0m'
 YELLOW='\e[0;33m'
 RED='\e[0;31m'
@@ -39,8 +39,10 @@ failed() {
 run() {
   echo -e "--> Running Platform, with environment: ${YELLOW}${PLATFORM_ENV}${NC}"
 
+  #-v /home/jest/go/src/github.com/gambol99/terraform-gotemplate/bin/gotemplate:/usr/bin/gotemplate \
   /usr/bin/docker run -ti --rm \
     -w ${WORKDIR} \
+    -e GIT_BRANCH="${GIT_BRANCH}" \
     -e PLATFORM_ENV="${PLATFORM_ENV}" \
     -e AWS_ACCESS_KEY_ID="${AWS_ACCESS_KEY_ID}" \
     -e AWS_DEFAULT_REGION="${AWS_DEFAULT_REGION}" \
@@ -49,7 +51,11 @@ run() {
     -v ${PWD}/ca:${WORKDIR}/ca \
     -v ${PWD}/scripts:${WORKDIR}/scripts \
     -v ${PWD}/scripts/.bashrc:/root/.bashrc \
-    -v ${PWD}/terraform:${WORKDIR}/terraform \
+    -v ${PWD}/terraform/.terraformrc:/root/.terraformrc \
+    -v ${PWD}/terraform/modules:${WORKDIR}/terraform/modules \
+    -v ${PWD}/terraform/main.tf:${WORKDIR}/terraform/main.tf \
+    -v ${PWD}/terraform/provider.tf:${WORKDIR}/terraform/provider.tf \
+    -v ${PWD}/terraform/variables.tf:${WORKDIR}/terraform/variables.tf \
     ${PLATFORM_IMAGE}:${PLATFORM_VERSION}
 }
 

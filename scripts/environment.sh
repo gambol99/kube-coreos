@@ -2,7 +2,6 @@
 #
 #  vim:ts=2:sw=2:et
 #
-
 [[ -n "${DEBUG}" ]] && set -x
 
 log() {
@@ -17,7 +16,7 @@ generate_password() {
 }
 
 terraform_get_config() {
-  config_value=$(awk -F "=" "/^${1}/ { print \$2; exit;}" $ENVIRONMENT_FILE | sed -e 's/[ ]*//g' -e 's/\"//g')
+  config_value=$(hcltool ${ENVIRONMENT_FILE} 2>/dev/null | jq -r ".${1}")
   echo $config_value
 }
 
@@ -28,7 +27,7 @@ export YELLOW='\e[0;33m'
 export RED='\e[0;31m'
 export ENVIRONMENT_FILE=${ENVIRONMENT_FILE:-"env.tfvars"}
 export PLATFORM_ENV=$(terraform_get_config "environment")
-export ENVIRONMENT=$PLATFORM_ENV
+export ENVIRONMENT=${PLATFORM_ENV}
 export CONFIG_AWS_KMS_ID=$(terraform_get_config "kms_master_id")
 export CONFIG_DNS_ZONE_NAME=$(terraform_get_config "public_zone_name")
 export CONFIG_ENVIRONMENT=$(terraform_get_config "environment")
@@ -59,5 +58,7 @@ export TF_VAR_aws_region=${AWS_DEFAULT_REGION}
 #done < <(set | grep ^CONFIG_)
 
 export ENVIRONMENT_SET=true
+
+[[ -z "${TERRAFORM_BUCKET}" ]] && failed "you have specified a terraform bucket ('terraform_bucket_name') for remote state"
 
 mkdir -p ${SECRETS_DIR}/{secure,compute,common,locked}

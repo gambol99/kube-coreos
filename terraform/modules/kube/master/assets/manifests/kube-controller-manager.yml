@@ -7,12 +7,12 @@ spec:
   hostNetwork: true
   containers:
   - name: secrets
-    image: ${kmsctl_image}
+    image: {{ .kmsctl_image }}
     args:
-    - --region=${aws_region}
+    - --region={{ .aws_region }}
     - get
-    - --output-dir=/etc/secrets
-    - --bucket=${secrets_bucket_name}
+    - --output-dir=/etc/kubernetes
+    - --bucket={{ .secrets_bucket_name }}
     - --sync=true
     - --sync-interval=10m
     - --recursive=true
@@ -20,16 +20,14 @@ spec:
     - secure/kubeapi-key.pem
     resources:
       requests:
-        cpu: 50m
         memory: 50Mi
       limits:
-        cpu: 200m
         memory: 800Mi
     volumeMounts:
     - name: secrets
       mountPath: /etc/secrets
   - name: kube-controller-manager
-    image: ${kubernetes_image}
+    image: {{ .kubernetes_image }}
     command:
     - /hyperkube
     - controller-manager
@@ -49,10 +47,8 @@ spec:
       timeoutSeconds: 15
     resources:
       requests:
-        cpu: 50m
         memory: 50Mi
       limits:
-        cpu: 2000m
         memory: 8000Mi
     volumeMounts:
     - name: secrets

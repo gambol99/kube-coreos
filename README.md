@@ -9,7 +9,7 @@ The environments are kept in the root environments directory. Note, when using a
 
 #### **- AWS Credentials**
 
-The build assumes you are using an aws credentials file, the default location ${HOME}/.aws/credentials is automatically mapped into the container on start. Ensure you use the correct aws profile by setting the aws_profile in the platform environment file and the correct permissions on the IAM account.
+The AWS credentials passed into the container either via preset environment variables (i.e. it will first check they are set) or reading them from the current users static credentials files (~/.aws/credentials, assuming the environment variables aren't set). The profile is mapped to the environment name.
 
 #### **- Building**
 
@@ -70,10 +70,6 @@ Most of the Kubernetes service, barring the kubelet are deployed using manifests
 #### **- Secrets**
 
 All the secrets for the platform are kept in an s3 bucket and encrypted via KMS. Once the platform is built you can check directory structure under platform/secrets. Pulling or uploading the secrets simply involves fetch-secrets or upload-secrets aliases. Note, uploading ABAC or Kubernetes tokens.csv requires only an upload of the changes secrets as the kube-auth container (k8s webhook bridge) will take care of the reloading for the file.
-
-#### **- Terraform Remote State**
-
-Assuming you wish to use terraform remote state and I highly recommend you should, you need to create an s3 bucket for the remote state. Once the bucket has been created, we can add the 'terraform_bucket_name' variable to the terraform tfvars file. The bucket will be automatically provision and the state push on every run.
 
 #### **- Bash Aliases**
 

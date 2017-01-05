@@ -41,25 +41,25 @@ resource "aws_security_group" "secure" {
 ## ELB Security Group
 resource "aws_security_group" "elb" {
   name        = "${var.environment}-elb"
-  description = " ELB Security Group for ${var.environment} environment"
+  description = "ELB Security Group for ${var.environment} environment"
   vpc_id      = "${aws_vpc.vpc.id}"
 
   tags {
     Name = "${var.environment}-elb"
     Env  = "${var.environment}"
-    Role = "elb"
+    Role = "load-balancers"
   }
 }
 
 ## Management Security Group
 resource "aws_security_group" "mgmt" {
   name        = "${var.environment}-mgmt"
-  description = " mgmt Security Group for ${var.environment} environment"
+  description = "Management Security Group for ${var.environment} environment"
   vpc_id      = "${aws_vpc.vpc.id}"
 
   tags {
     Name = "${var.environment}-mgmt"
     Env  = "${var.environment}"
-    Role = "mgmt"
+    Role = "mangement"
   }
 }

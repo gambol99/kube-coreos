@@ -44,6 +44,9 @@ variable "flannel_memberlist" {
 variable "kubeapi_dns" {
   description = "The dns name of the internal kubernetes api elb"
 }
+variable "enable_calico" {
+  description = "Whether the calico should be enabled on the compute layer"
+}
 
 #
 ## AWS PROVIDER

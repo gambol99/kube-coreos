@@ -2,7 +2,7 @@
 ## Kuberneres Secure Layer Resources
 #
 
-## Secure Node Role Policy Template
+##  Role Policy Template
 data "template_file" "secure" {
   template = "${file("${path.module}/assets/iam/secure-role.json")}"
 
@@ -14,18 +14,19 @@ data "template_file" "secure" {
   }
 }
 
-## Secure Node instance profile
+## Instance profile
 resource "aws_iam_instance_profile" "secure" {
   name  = "${var.environment}-secure"
   roles = [ "${aws_iam_role.secure.name}" ]
 }
 
-## Secure Node UserData template
-data "template_file" "secure_user_data" {
+## UserData template
+data "gotemplate_file" "secure_user_data" {
   template = "${file("${path.module}/assets/cloudinit/secure.yml")}"
 
   vars = {
     aws_region             = "${var.aws_region}"
+    enable_calico          = "${var.enable_calico}"
     environment            = "${var.environment}"
     etcd_memberlist        = "${join(",", formatlist("%s=https://%s:2380", keys(var.secure_nodes), values(var.secure_nodes)))}"
     flannel_cidr           = "${var.flannel_cidr}"
@@ -53,7 +54,7 @@ resource "aws_launch_configuration" "secure" {
   key_name                    = "${var.key_name}"
   name_prefix                 = "${var.environment}-secure-"
   security_groups             = [ "${var.secure_sg}" ]
-  user_data                   = "${data.template_file.secure_user_data.rendered}"
+  user_data                   = "${data.gotemplate_file.secure_user_data.rendered}"
 
   lifecycle {
     create_before_destroy = true

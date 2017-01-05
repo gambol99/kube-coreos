@@ -37,6 +37,9 @@ variable "public_zone" {
 variable "private_zone" {
   description = "The zone host ID of the internal route53 hosted domain"
 }
+variable "enable_calico" {
+  description = "Whether the calico should be enabled on the compute layer"
+}
 
 #
 ## AWS PROVIDER
