@@ -23,6 +23,7 @@ data "gotemplate_file" "compute_user_data" {
     kubeapi_dns            = "${var.kubeapi_dns}"
     kubernetes_image       = "${element(split(":", var.kubernetes_image), 0)}"
     kubernetes_version     = "${element(split(":", var.kubernetes_image), 1)}"
+    labels                 = "${join(",", formatlist("%s=%s", keys(var.compute_labels), values(var.compute_labels)))}"
     private_zone_name      = "${var.private_zone_name}"
     public_zone_name       = "${var.public_zone_name}"
     secrets_bucket_name    = "${var.secrets_bucket_name}"

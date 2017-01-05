@@ -10,7 +10,7 @@ ENV CFSSL_VERSION=1.2 \
     TERRAFORM_VERSION=0.8.2 \
     KMSCTL_VERSION=1.0.3 \
     KUBECTL_VERSION=1.4.7 \
-    GOTEMPLATE_VERSION=0.0.1
+    GOTEMPLATE_VERSION=0.0.2
 
 RUN curl -sL https://pkg.cfssl.org/R${CFSSL_VERSION}/cfssl_linux-amd64 -o /usr/bin/cfssl && chmod +x /usr/bin/cfssl && \
     curl -sL https://pkg.cfssl.org/R${CFSSL_VERSION}/cfssljson_linux-amd64 -o /usr/bin/cfssljson && chmod +x /usr/bin/cfssljson && \

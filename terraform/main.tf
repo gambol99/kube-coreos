@@ -94,6 +94,7 @@ module "compute" {
   compute_docker_volume      = "${var.compute_docker_volume}"
   compute_docker_volume_type = "${var.compute_docker_volume_type}"
   compute_flavor             = "${var.compute_flavor}"
+  compute_labels             = "${var.compute_labels}"
   compute_root_volume        = "${var.compute_root_volume}"
   coreos_image               = "${var.coreos_image}"
   enable_calico              = "${var.enable_calico}"
@@ -149,4 +150,5 @@ module "bastion" {
 output "kubeapi_public"        { value = "${module.api.kubeapi_dns}" }
 output "kubeapi_public_elb"    { value = "${module.api.kubeapi_dns_aws}"}
 output "compute_asg"           { value = "${module.compute.compute_asg_name}"}
+output "enabled_calico"        { value = "${var.enable_calico}" }
 output "public_name_services"  { value = [ "${module.platform.public_nameservers}" ] }

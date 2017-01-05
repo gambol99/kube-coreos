@@ -44,6 +44,12 @@ variable "enable_calico" {
   description = "Whether to enable the calico network security policy"
   default     = true
 }
+variable "compute_labels" {
+  description = "A map of labels to be applied to the compute nodes"
+  default     = {
+    role = "compute"
+  }
+}
 
 ## AWS PROVIDER ##
 variable "aws_region" {

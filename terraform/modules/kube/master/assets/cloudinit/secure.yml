@@ -124,7 +124,7 @@ coreos:
       content: |
         [Service]
         Environment="DOCKER_OPTS=--iptables=false --log-opt max-size=100m --log-opt max-file=1 --default-ulimit=nofile=32768:32768 --default-ulimit=nproc=16384:16384"
-    {{ if .enable_calico -}}
+    {{ if is_true .enable_calico -}}
     - name: 40-flannel.conf
       content: |
         [Unit]
@@ -259,7 +259,7 @@ coreos:
         --cloud-provider=aws \
         --cluster-dns=10.200.0.10 \
         --cluster-domain=cluster.local \
-        {{ if .enable_calico -}}
+        {{- if is_true .enable_calico -}}
         --cni-conf-dir=/etc/kubernetes/cni/net.d \{{ end }}
         --cpu-cfs-quota=true \
         --host-network-sources=* \
@@ -269,7 +269,7 @@ coreos:
         --logtostderr=true \
         --maximum-dead-containers-per-container=1 \
         --maximum-dead-containers=10 \
-        {{ if .enable_calico -}}
+        {{- if is_true .enable_calico -}}
         --network-plugin=cni \{{ end }}
         --node-labels="role=master" \
         --pod-manifest-path=/etc/kubernetes/manifests \
@@ -285,7 +285,7 @@ write_files:
     [Global]
     KubernetesClusterTag = "${environment}"
     DisableSecurityGroupIngress = true
-{{ if .enable_calico -}}
+{{- if is_true .enable_calico -}}
 - path: /etc/kubernetes/cni/net.d/10-flannel.conf
   permissions: 0444
   owner: root

@@ -19,9 +19,8 @@ spec:
     - --recursive=true
     - addons/kubedns
     - addons/dashboard
-    {{ if .enable_calico -}}
-    - addons/calico
-    {{ end -}}
+    {{- if is_true .enable_calico }}
+    - addons/calico{{ end }}
     resources:
       limits:
         memory: 300Mi

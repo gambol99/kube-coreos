@@ -15,11 +15,7 @@ alias ..="cd .."
 # source in kubectl completion
 source <(kubectl completion bash)
 
-# if not master, show the branch
-export PS1="[${PLATFORM_ENV}@\W]$ "
-if [[ "${GIT_BRANCH}" != "master" ]]; then
-  PS1="[${PLATFORM_ENV}@\W] (${YELLOW}${GIT_BRANCH}${NC}) $ "
-fi
+export PS1="[${PLATFORM_ENV}@\W] (${YELLOW}${GIT_BRANCH}${NC}) $ "
 
 plan() { run_platform scripts/terraform.sh plan; }
 run-plan() { run_platform scripts/run.sh plan; }

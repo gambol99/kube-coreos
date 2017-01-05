@@ -47,6 +47,10 @@ variable "kubeapi_dns" {
 variable "enable_calico" {
   description = "Whether the calico should be enabled on the compute layer"
 }
+variable "compute_labels" {
+  description = "A map of keypairs which are added as node labels to the compute nodes"
+  type        = "map"
+}
 
 #
 ## AWS PROVIDER
