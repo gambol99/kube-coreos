@@ -130,9 +130,6 @@ variable "secure_asg_grace_period" {
 variable "kubeapi_internal_dns" {
   description = "The dns name of the internal kubernetes api elb"
 }
-variable "etcd_dns" {
-  description = "The dns name of the internal etcd elb"
-}
 
 #
 ## MISC RELATED ##

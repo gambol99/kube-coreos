@@ -39,7 +39,7 @@ spec:
     - --sync=true
     - --sync-interval=1h
     - --recursive=true
-    - secure/kubeconfig_admin
+    - secure/kubeconfig_bootstrap
     resources:
       limits:
         memory: 300Mi

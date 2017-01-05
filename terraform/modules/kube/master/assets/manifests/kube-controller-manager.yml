@@ -11,7 +11,7 @@ spec:
     args:
     - --region={{ .aws_region }}
     - get
-    - --output-dir=/etc/kubernetes
+    - --output-dir=/etc/secrets
     - --bucket={{ .secrets_bucket_name }}
     - --sync=true
     - --sync-interval=10m

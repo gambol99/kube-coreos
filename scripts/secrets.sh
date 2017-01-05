@@ -11,6 +11,7 @@ upload_secrets() {
     for _file in */**; do
       # step: we dont need to push the manifests
       [[ "${_file}" =~ ^manifests.*$ ]] && continue
+      [[ "${_file}" =~ ^addons.*$ ]] && continue
       kmsctl put --bucket ${CONFIG_SECRET_BUCKET_NAME} --kms ${CONFIG_AWS_KMS_ID} ${_file} || while read line; do
         annonce ${line}
       done
@@ -40,6 +41,7 @@ setup_secrets() {
     cat <<EOF > ${HOME}/.ssh/config
 Host *
   User core
+  ForwardAgent yes
 EOF
   fi
 }

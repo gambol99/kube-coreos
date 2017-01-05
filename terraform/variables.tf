@@ -30,24 +30,18 @@ variable "kubernetes_image" {
 }
 variable "kubeapi_internal_dns" {
   description = "The dns name of the internal kubernetes api elb"
-  default     = "kube"
 }
 variable "kubeapi_dns" {
   description = "The dns / hostname of the external kubernetes api"
-  default     = "kube"
-}
-variable "etcd_dns" {
-  description = "The dns name of the internal etcd elb"
-  default     = "etcd"
 }
 variable "enable_calico" {
   description = "Whether to enable the calico network security policy"
-  default     = true
+  default     = false
 }
 variable "compute_labels" {
   description = "A map of labels to be applied to the compute nodes"
   default     = {
-    role = "compute"
+    "role" = "compute"
   }
 }
 

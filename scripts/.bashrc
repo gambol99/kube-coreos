@@ -16,10 +16,18 @@ alias ..="cd .."
 source <(kubectl completion bash)
 
 export PS1="[${PLATFORM_ENV}@\W] (${YELLOW}${GIT_BRANCH}${NC}) $ "
+export PATH=$PATH:${WORKDIR}/scripts
 
 plan() { run_platform scripts/terraform.sh plan; }
-run-plan() { run_platform scripts/run.sh plan; }
-run() { run_platform scripts/run.sh; }
+run() { run_platform scripts/run.sh $@; }
+fetch-secrets()  { run_platform scripts/secrets.sh fetch;  }
+upload-secrets() { run_platform scripts/secrets.sh upload; }
+
+# agent-setup sets up ssh-agent for use
+agent-setup() {
+  eval `ssh-agent`
+  ssh-add
+}
 
 # apply if responsible to applying the terraform config
 apply() {
@@ -31,9 +39,6 @@ apply() {
   fi
   run_platform scripts/terraform.sh apply
 }
-
-fetch-secrets()  { run_platform scripts/secrets.sh fetch;  }
-upload-secrets() { run_platform scripts/secrets.sh upload; }
 
 show-cert() {
   local filename=$1
@@ -70,6 +75,7 @@ scale-compute() {
   fi
 }
 
+# terminate-layer is a helper method to terminate the instances in a layer
 terminate-layer() {
   local layer="$1"
   # step: ensure we can't do this on a non-playground account
@@ -111,20 +117,4 @@ aws-elbs() {
   aws elb describe-load-balancers \
     --query 'LoadBalancerDescriptions[].[LoadBalancerName,DNSName]' \
     --output table
-}
-
-# prompt_assurance is responsible for interactively prompting user for ensure they meant it
-prompt_assurance() {
-  local message="$1"
-  local play_check="$2"
-  [[ -z "${message}" ]] && return 1
-  echo -n -e "${message} (yes/no) "; read choice
-  # check: unless yes or y return 1
-  [[ ! "${choice}" =~ ^(yes|[yY])$ ]] && return 1
-  # check: are we double checking
-  if [[ "${play_check}" == true && ! "${PLATFORM_ENV}" =~ ^play.*$ ]]; then
-    echo -n -e "Are you ABSOLUTELY SURE, given this is a non-playground account? (yes/no) "; read sure
-    [[ ! "${sure}" =~ ^(yes|[yY])$ ]] && return 1
-  fi
-  return 0
 }

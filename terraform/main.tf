@@ -25,7 +25,6 @@ module "master" {
   coreos_image_owner       = "${var.coreos_image_owner}"
   enable_calico            = "${var.enable_calico}"
   environment              = "${var.environment}"
-  etcd_dns                 = "${var.etcd_dns}"
   flannel_cidr             = "${var.flannel_cidr}"
   kms_master_id            = "${var.kms_master_id}"
   kubeapi_internal_dns     = "${var.kubeapi_internal_dns}"

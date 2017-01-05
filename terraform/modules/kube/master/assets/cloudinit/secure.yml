@@ -283,7 +283,7 @@ write_files:
   owner: root
   content: |
     [Global]
-    KubernetesClusterTag = "${environment}"
+    KubernetesClusterTag = "{{ .environment }}"
     DisableSecurityGroupIngress = true
 {{- if is_true .enable_calico -}}
 - path: /etc/kubernetes/cni/net.d/10-flannel.conf

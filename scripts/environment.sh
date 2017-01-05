@@ -15,9 +15,30 @@ generate_password() {
   echo $(tr -dc 'a-zA-Z0-9' < /dev/urandom | head -c ${1:-24})
 }
 
+# terraform_get_config is responsible for getting the config from the environment file
 terraform_get_config() {
   config_value=$(hcltool ${ENVIRONMENT_FILE} 2>/dev/null | jq -r ".${1}")
+  if [[ -z "${config_value}" ]]; then
+    error "the environment variable: ${1} has not been set"
+    exit 1
+  fi
   echo $config_value
+}
+
+# prompt_assurance interactively prompts user for ensure they meant it
+prompt_assurance() {
+  local message="$1"
+  local play_check="$2"
+  [[ -z "${message}" ]] && return 1
+  echo -n -e "${message} (yes/no) "; read choice
+  # check: unless yes or y return 1
+  [[ ! "${choice}" =~ ^(yes|[yY])$ ]] && return 1
+  # check: are we double checking
+  if [[ "${play_check}" == true && ! "${PLATFORM_ENV}" =~ ^play.*$ ]]; then
+    echo -n -e "Are you ABSOLUTELY SURE, given this is a non-playground account? (yes/no) "; read sure
+    [[ ! "${sure}" =~ ^(yes|[yY])$ ]] && return 1
+  fi
+  return 0
 }
 
 [[ "${ENVIRONMENT_SET}" == true ]] && return
@@ -34,6 +55,8 @@ export CONFIG_ENVIRONMENT=$(terraform_get_config "environment")
 export CONFIG_PRIVATE_ZONE_NAME=$(terraform_get_config "private_zone_name")
 export CONFIG_SECRET_BUCKET_NAME=$(terraform_get_config "secrets_bucket_name")
 export CONFIG_TERRAFORM_S3_BUCKET=$(terraform_get_config "terraform_bucket_name")
+export CONFIG_KUBEAPI_HOSTNAME=$(terraform_get_config "kubeapi_dns")
+export CONFIG_KUBEAPI_INTERNAL_HOSTNAME=$(terraform_get_config "kubeapi_internal_dns")
 
 [ -z "${PLATFORM_ENV}" ] && failed "you need to specify the environment stack, i.e. dev, prod etc"
 

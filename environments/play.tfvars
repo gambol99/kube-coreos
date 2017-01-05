@@ -10,16 +10,19 @@ private_zone_name        = "PLATFORM_ENV.dsp.io"
 environment              = "play-PLATFORM_ENV"
 # REQUIRED: You have to create a KMS key and place the KeyID here
 kms_master_id            = ""
-# The external dns name of the kube api
+# REQUIRED: The external dns name of the kube api
 kubeapi_dns              = "kube-PLATFORM_ENV"
+# REQUIRED: The internal dns name of the kube api
+kubeapi_internal_dns     = "kube"
 # The name of the s3 bucket we will use to store secrets
 secrets_bucket_name      = "dev-io-secrets-PLATFORM_ENV"
 # REQUIRED: is bucket has to be create before hand
 terraform_bucket_name    = "dev-io-terraform-PLATFORM_ENV"
-# The VPC subnet
+# The subnet for the VPC
 vpc_cidr                 = "10.80.0.0/16"
-# Enable the calico network policy manager
+# Enable the calico network policy manager for kubernetes
 enable_calico            = false
+
 # The addresses permitted to access the kubeapi
 kubeapi_access_list = [
   "0.0.0.0/0"

@@ -52,10 +52,12 @@ make_csr() {
 EOF
 }
 
+# create_directories is responsible for creating the secrets directories
 create_directories() {
   mkdir -p ${SECRETS_DIR}/{common,compute,secure,locked,manifests}
 }
 
+# create_certificates generates the platform and component certificates
 create_certificates() {
   # step: generate the csr for the platform
   make_csr "etcd"       > ${ETCD_CSR}
@@ -90,52 +92,65 @@ create_certificates() {
   fi
 }
 
-make_kubeconfig() {
-  cat <<EOF > ${SECRETS_DIR}/secure/kubeconfig_${1}
+# make_credentials generates token and kubeconfig for a specific user
+make_credentials() {
+  local user="${1}"
+  local server="${2}"
+  local path="${3}"
+  local token="$(generate_password 32)"
+  local userid="$(uuidgen)"
+
+  # step: add the token if required
+  grep -q "^${user}" ${TOKENS_CSV} || echo "${token},${user},${userid}" >> ${TOKENS_CSV}
+  # step: generate a kubeconfig if required
+  if [[ ! -f "${path}" ]]; then
+    annonce "Generating the credential file for user: ${user}"
+    # step: create kubeconfig for this user
+    cat <<EOF > ${path}
 apiVersion: v1
 kind: Config
 clusters:
 - cluster:
+    server: ${server}
     insecure-skip-tls-verify: true
   name: default
 contexts:
 - context:
-    user: ${1}
+    user: ${user}
     cluster: default
   name: default
 current-context: default
 users:
-- name: ${1}
+- name: ${user}
   user:
-    token: ${2}
+    token: ${token}
 EOF
+  fi
 }
 
+# create_kubernetes_configs is responsible for generaing the kubeconfig files for the components
 create_kubernetes_configs() {
   [[ -e ${TOKENS_CSV} ]] || touch ${TOKENS_CSV}
-  for _username in admin controller scheduler kubelet proxy; do
-    if ! grep -q "^${_username}" ${TOKENS_CSV}; then
-      token="$(generate_password 24)"
-      userid="$(uuidgen)"
-      echo "${token},${_username},${userid}" >> ${TOKENS_CSV}
-      make_kubeconfig "${_username}" "${token}" "${userid}"
-    fi
+  for _username in controller scheduler kubelet bootstrap; do
+    make_credentials "${_username}" "https://127.0.0.1:6443" "${SECRETS_DIR}/secure/kubeconfig_${_username}"
   done
-  # step: move the kube config to compute
-  mv ${SECRETS_DIR}/secure/kubeconfig_proxy ${SECRETS_DIR}/common
-  mv ${SECRETS_DIR}/secure/kubeconfig_kubelet ${SECRETS_DIR}/compute
-
+  # step: make the kubeconfig for proxy, kubelet and admin
+  make_credentials "kubelet" "https://${CONFIG_KUBEAPI_INTERNAL_HOSTNAME}.${CONFIG_PRIVATE_ZONE_NAME}" "${SECRETS_DIR}/compute/kubeconfig_kubelet"
+  make_credentials "proxy" "https://${CONFIG_KUBEAPI_INTERNAL_HOSTNAME}.${CONFIG_PRIVATE_ZONE_NAME}" "${SECRETS_DIR}/common/kubeconfig_proxy"
+  make_credentials "admin" "https://${CONFIG_KUBEAPI_INTERNAL_HOSTNAME}.${CONFIG_DNS_ZONE_NAME}" "${SECRETS_DIR}/secure/kubeconfig_admin"
   # step: copy the admin kubeconfig to $HOME
   mkdir -p ${HOME}/.kube
   [[ -L "${HOME}/.kube/config" ]] || ln -sf ${PWD}/${SECRETS_DIR}/locked/kubeconfig_admin ${HOME}/.kube/config
 }
 
+# create_kubernetes_auth_policy is responsible for generating the initial ABAC policy for the cluster
 create_kubernetes_auth_policy() {
   if [[ ! -f "${KUBEAPI_AUTH}" ]]; then
     annonce "Generating the Kubernetes authentication policy"
     cat <<EOF > ${KUBEAPI_AUTH}
 { "apiVersion": "abac.authorization.kubernetes.io/v1beta1", "kind": "Policy", "spec": { "user":"*", "nonResourcePath": "*", "readonly": true }}
 { "apiVersion": "abac.authorization.kubernetes.io/v1beta1", "kind": "Policy", "spec": { "user":"admin", "namespace": "*", "resource": "*", "apiGroup": "*" }}
+{ "apiVersion": "abac.authorization.kubernetes.io/v1beta1", "kind": "Policy", "spec": { "user":"bootstrap", "namespace": "*", "resource": "*", "apiGroup": "*" }}
 { "apiVersion": "abac.authorization.kubernetes.io/v1beta1", "kind": "Policy", "spec": { "user":"controller", "namespace": "*", "resource": "*", "apiGroup": "*" }}
 { "apiVersion": "abac.authorization.kubernetes.io/v1beta1", "kind": "Policy", "spec": { "user":"scheduler", "namespace": "*", "resource": "*", "apiGroup": "*" }}
 { "apiVersion": "abac.authorization.kubernetes.io/v1beta1", "kind": "Policy", "spec": { "user":"kubelet", "namespace": "*", "resource": "*", "apiGroup": "*" }}
@@ -185,7 +200,6 @@ contexts:
 EOF
   fi
 }
-
 
 create_directories
 create_certificates
