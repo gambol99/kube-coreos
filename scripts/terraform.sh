@@ -39,14 +39,14 @@ case "${COMMAND}" in
   apply|destroy)
     shift
     (
-      cd ${PROVIDER_DIR} && $TERRAFORM get &&
+      cd ${PROVIDER_DIR} && $TERRAFORM get -update &&
       $TERRAFORM ${COMMAND} ${TERRAFORM_OPTIONS} ${TERRAFORM_VAR_FILES} $@
     ) || { error "unable to complete terraform operation"; RET=1; }
     ;;
   plan)
     shift
     (
-      cd ${PROVIDER_DIR} && $TERRAFORM get &&
+      cd ${PROVIDER_DIR} && $TERRAFORM get -update &&
       $TERRAFORM ${COMMAND} ${TERRAFORM_OPTIONS} -module-depth=-1 ${TERRAFORM_VAR_FILES} $@
     ) || { error "unable to complete terraform operation"; RET=1; }
     ;;
@@ -58,7 +58,7 @@ case "${COMMAND}" in
   show|graph|taint|output)
     shift
     (
-      cd ${PROVIDER_DIR} && $TERRAFORM get >/dev/null &&
+      cd ${PROVIDER_DIR} && $TERRAFORM get -update >/dev/null &&
       $TERRAFORM ${COMMAND} $@
     ) || { error "unable to complete terraform operation"; RET=1; }
     ;;
