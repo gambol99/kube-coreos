@@ -70,7 +70,8 @@ get_credentials() {
 setup_playground() {
   if [[ "${PLATFORM_ENV}" == "play" ]]; then
     if [[ ! -f "${PLAYGROUND_FILE}" ]]; then
-      annonce "copying the default playground file: ${PLAYGROUND_DEFAULT} to: ${PLAYGROUND_FILE}"
+      annonce "Copying the default playground file: ${PLAYGROUND_DEFAULT} to: ${PLAYGROUND_FILE}"
+      annonce "Ensure to update the required envirnoment variables in the ${WORKDIR}/env.tfvars file"
       cp ${PLAYGROUND_DEFAULT} ${PLAYGROUND_FILE} || failed "unable to copy the default playground file: ${PLAYGROUND_DEFAULT}"
       sed -i "s/PLATFORM_ENV/${USER}/g" ${PLAYGROUND_FILE} || failed "unable to update the username in file: ${PLAYGROUND_FILE}"
     fi

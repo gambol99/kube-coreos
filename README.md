@@ -13,7 +13,7 @@ The AWS credentials passed into the container either via preset environment vari
 
 #### **- Building**
 
-There are two prerequestes before doing a build, namely the KMS key use for at-rest encryption of the secrets and the terraform state bucket (though this one might be wrapped up in the script by now).
+There are a few prerequestes before doing a build, namely the KMS key use for at-rest encryption of the secrets and the terraform state bucket (though this one might be wrapped up in the script by now).
 
 * Ensure you have created a AWS KMS key *(in the correct region)* and updated the kms_master_id with the KeyID in the environment file.
 * Ensure you have created an S3 bucket for the terraform remote state and update the *terraform_bucket_name* variable in the environment file.
@@ -21,39 +21,81 @@ There are two prerequestes before doing a build, namely the KMS key use for at-r
 * Ensure you have updated the *kubeapi_access_list* and *ssh_access_list* environment variable to include your ip address.
 
 ```shell
+# Create the terraform bucket
 [jest@starfury kubernetes-platform]$ ./play.kube
 --> Running Platform, with environment: play-jest
-[play-jest@platform]$
-# Perform a build run
-# - will generate the certificates, secrets and start build the environment
-[play-jest@platform]$ run
+[play-jest@platform] (master) $ kmsctl bucket create --bucket play-jest-kube-terraform-eu-west-1
+... Update
+
+#  Create the KMS key for encryption
+[play-jest@platform] (master) $ kmsctl kms create --name kube-play --description "A shared KMS used for playground builds"
+...
+
+# Remember to update the variables (kms_master_id and terraform_bucket_name) in the platform/env.tfvars file !!
+# Then update teh public and private dns zone for environment and the access lists for ssh and kubeapi access (defaults 0.0.0.0/0)
+
+# Kicking off the a build
+[play-jest@platform] (master) $ run  
 ... BUILDING ...
-[play-jest@platform]$ aws-instances
--------------------------------------------------------------------------------------------
-|                                    DescribeInstances                                    |
-+-------------+----------------+-----------------+-------------+-----------+--------------+
-|  dev-compute|  10.100.2.207  |  52.50.141.164  |  i-d9e30f54 |  running  |  eu-west-1c  |
-|  dev-compute|  10.100.0.40   |  52.209.124.164 |  i-ec7a5560 |  running  |  eu-west-1a  |
-|  dev-secure |  10.100.10.52  |  52.209.201.54  |  i-747a55f8 |  running  |  eu-west-1a  |
-|  dev-secure |  10.100.10.51  |  52.209.195.91  |  i-777a55fb |  running  |  eu-west-1a  |
-|  dev-secure |  10.100.12.23  |  52.209.195.176 |  i-36e20ebb |  running  |  eu-west-1c  |
-+-------------+----------------+-----------------+-------------+-----------+--------------+
 
-# list the Kubernetes api ELB
-[play-jest@platform]$ aws-elbs
---------------------------------------------------------------------------------------
-|                                DescribeLoadBalancers                               |
-+----------------+-------------------------------------------------------------------+
-|  dev-kubeapi   |  dev-kubeapi-1815972942.eu-west-1.elb.amazonaws.com               |
-|  dev-kube-elb  |  internal-dev-kube-elb-457444291.eu-west-1.elb.amazonaws.com      |
-|  dev-secure-elb|  internal-dev-secure-elb-1990127985.eu-west-1.elb.amazonaws.com   |
-+----------------+-------------------------------------------------------------------+
+# Listing the instances
+[play-jest@platform] (master) $ aws-instances
+--------------------------------------------------------------------------------------------------------
+|                                           DescribeInstances                                          |
++-------------------+---------------+----------------+----------------------+-----------+--------------+
+|  play-jest-compute|  10.80.20.160 |  None          |  i-038e04cc103a61161 |  running  |  eu-west-1a  |
+|  play-jest-compute|  10.80.22.252 |  None          |  i-08f17394ccce0c69b |  running  |  eu-west-1c  |
+|  play-jest-bastion|  10.80.110.30 |  54.154.99.216 |  i-0041f7a15d54455d2 |  running  |  eu-west-1a  |
+|  play-jest-compute|  10.80.21.84  |  None          |  i-03357aa1e7f0f6aa9 |  running  |  eu-west-1b  |
+|  play-jest-secure |  10.80.11.109 |  None          |  i-0de8c881ae76e6600 |  running  |  eu-west-1b  |
+|  play-jest-secure |  10.80.12.160 |  None          |  i-00f36bede3f0894ef |  running  |  eu-west-1c  |
+|  play-jest-secure |  10.80.10.155 |  None          |  i-0a9c35b5c68f49100 |  running  |  eu-west-1a  |
++-------------------+---------------+----------------+----------------------+-----------+--------------+
 
-[root@platform kube-coreos]$  kubectl -s https://dev-kubeapi-1815972942.eu-west-1.elb.amazonaws.com get ns
+# List all the ELBS
+[play-jest@platform] (master) $ aws-elbs
+--------------------------------------------------------------------------------------------------------------------
+|                                               DescribeLoadBalancers                                              |
++-----------------------------------+------------------------------------------------------------------------------+
+|  play-jest-kube-internal-elb      |  internal-play-jest-kube-internal-elb-382791532.eu-west-1.elb.amazonaws.com  |
+|  play-jest-kubeapi                |  play-jest-kubeapi-2081633621.eu-west-1.elb.amazonaws.com                    |
++-----------------------------------+------------------------------------------------------------------------------+
+
+# A kubeconfig has already been copied from secrets/secure/kubeconfig_admin to ~/.kube/config for you. Note, by
+# default the server url will be public hostname of the kubeapi. If you have not set the sub-domain yet your'll
+# have you use the aws one for now
+
+[play-jest@platform] (master) $ terraform.sh output
+[v] --> Retrieving the terraform remote state
+Local and remote state in sync
+compute_asg = play-jest-compute-asg
+enabled_calico = 0
+kubeapi_public = https://kube-play-jest.eu.example.com
+kubeapi_public_elb = https://play-jest-kubeapi-2081633621.eu-west-1.elb.amazonaws.com
+public_name_services = [
+    ns-1227.awsdns-25.org,
+    ns-1787.awsdns-31.co.uk,
+    ns-469.awsdns-58.com,
+    ns-678.awsdns-20.net
+]
+
+[root@platform kube-coreos]$  kubectl -s https://play-jest-kubeapi-2081633621.eu-west-1.elb.amazonaws.com get ns
 NAME          STATUS    AGE
 default       Active    20m
 kube-system   Active    20m
 ```
+
+#### **- Bastion **
+
+All the Kubernetes instances are on private subnets and inaccesable publically, in order to ssh to the boxes you have to hop on via the bastion instances.
+
+```shell
+[jest@starfury kubernetes-platform]$ ./play.kube
+--> Running Platform, with environment: play-jest
+
+
+```
+
 
 #### **- Kubernetes Configuration**
 
@@ -69,7 +111,7 @@ Most of the Kubernetes service, barring the kubelet are deployed using manifests
 
 #### **- Secrets**
 
-All the secrets for the platform are kept in an s3 bucket and encrypted via KMS. Once the platform is built you can check directory structure under platform/secrets. Pulling or uploading the secrets simply involves fetch-secrets or upload-secrets aliases. Note, uploading ABAC or Kubernetes tokens.csv requires only an upload of the changes secrets as the kube-auth container (k8s webhook bridge) will take care of the reloading for the file.
+All the secrets for the platform are kept in an s3 bucket and encrypted via KMS. Once the platform is built you can check directory structure under platform/secrets. Pulling or uploading the secrets simply involves fetch-secrets or upload-secrets aliases. Note, uploading ABAC or Kubernetes tokens.csv requires only an upload, the changes will be automatically reloade by [kube-auth](https://github.com/gambol99/kube-auth) service.
 
 #### **- Bash Aliases**
 

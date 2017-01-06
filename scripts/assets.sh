@@ -155,8 +155,9 @@ create_kubernetes_auth_policy() {
 { "apiVersion": "abac.authorization.kubernetes.io/v1beta1", "kind": "Policy", "spec": { "user":"scheduler", "namespace": "*", "resource": "*", "apiGroup": "*" }}
 { "apiVersion": "abac.authorization.kubernetes.io/v1beta1", "kind": "Policy", "spec": { "user":"kubelet", "namespace": "*", "resource": "*", "apiGroup": "*" }}
 { "apiVersion": "abac.authorization.kubernetes.io/v1beta1", "kind": "Policy", "spec": { "user":"proxy", "namespace": "*", "resource": "*", "apiGroup": "*" }}
+{ "apiVersion": "abac.authorization.kubernetes.io/v1beta1", "kind": "Policy", "spec": { "user":"system:serviceaccount:kube-system:calico","namespace":"*","resource":"*","apiGroup":"*"}}
+{ "apiVersion": "abac.authorization.kubernetes.io/v1beta1", "kind": "Policy", "spec": { "user":"system:serviceaccount:kube-system:dashboard","namespace":"*","resource":"*","apiGroup":"*"}}
 { "apiVersion": "abac.authorization.kubernetes.io/v1beta1", "kind": "Policy", "spec": { "user":"system:serviceaccount:kube-system:kubedns","namespace":"*","resource":"*","apiGroup":"*", "readonly": true}}
-{ "apiVersion": "abac.authorization.kubernetes.io/v1beta1", "kind": "Policy", "spec": { "user":"system:serviceaccount:kube-system:calico","namespace":"*","resource":"*","apiGroup":"*", "readonly": true}}
 EOF
   fi
 }

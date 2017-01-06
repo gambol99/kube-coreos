@@ -150,6 +150,7 @@ coreos:
         ExecStartPre=/usr/bin/systemctl --quiet is-active install-kmsctl.service
         ExecStartPre=/opt/bin/kmsctl get --output-dir %t/etcd2 --recursive=true secure/etcd
         ExecStartPre=/usr/bin/chown -R etcd:etcd /var/lib/etcd2 %t/etcd2
+        ExecStartPre=-/usr/bin/rmdir /var/lib/etcd2/member
         ExecStart=
         ExecStart=/usr/bin/etcd2 --name=node${NODE_ID} \
           --initial-advertise-peer-urls=https://${NODE_IP}:2380 \

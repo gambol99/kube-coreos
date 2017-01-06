@@ -18,10 +18,6 @@ generate_password() {
 # terraform_get_config is responsible for getting the config from the environment file
 terraform_get_config() {
   config_value=$(hcltool ${ENVIRONMENT_FILE} 2>/dev/null | jq -r ".${1}")
-  if [[ -z "${config_value}" ]]; then
-    error "the environment variable: ${1} has not been set"
-    exit 1
-  fi
   echo $config_value
 }
 
@@ -40,8 +36,6 @@ prompt_assurance() {
   fi
   return 0
 }
-
-[[ "${ENVIRONMENT_SET}" == true ]] && return
 
 export NC='\e[0m'
 export YELLOW='\e[0;33m'
@@ -79,8 +73,6 @@ export TF_VAR_aws_region=${AWS_DEFAULT_REGION}
 #  TF_VALUE=$(echo $VALUE | sed -e "s/[\"']//g")
 #  export TF_VAR_${TF_NAME}="${TF_VALUE}"
 #done < <(set | grep ^CONFIG_)
-
-export ENVIRONMENT_SET=true
 
 [[ -z "${TERRAFORM_BUCKET}" ]] && failed "you have specified a terraform bucket ('terraform_bucket_name') for remote state"
 
