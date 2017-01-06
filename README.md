@@ -1,44 +1,58 @@
+## **Kubernetes Platform**
+---
 
-#### **- Building the build container**
+Kubernetes Platform is a collection of [terraform](terraform.io) modules, scripts and build container used to maintainer an collection of Kubernetes environments. All the requirements and prerequisites are packaged into the build container.
+
+#### **Build container**
 
 All the software requirements of the build are packaged up in a container; the Dockerfile for which can be found in the root. In order to build the container simply do a 'make' in the root folder. You can then jump inside via run.kube -e *ENV* script or use a playground via ./play.kube
 
-#### **- Environments**
+**Key Points**
 
-The environments are kept in the root environments directory. Note, when using a playground entrypoint (./play.kube) a default comfiguration is copied for you taking the environment name of play-<USERNAME>. Altnatively you can look at the variables.tf in the terraform directory to find all the attributes and settings.
+> - You can build the container via a local Makefile in the root of this repository, make
 
-#### **- AWS Credentials**
+#### **Environments**
+The environment files are kept in the environments/ directory; most of attributes has defaults but elements such as as DNS zone, KMS keys are must all be filled into before. Jump to the Getting Started tutorial for an example.
 
-The AWS credentials passed into the container either via preset environment variables (i.e. it will first check they are set) or reading them from the current users static credentials files (~/.aws/credentials, assuming the environment variables aren't set). The profile is mapped to the environment name.
+> **Note**: the playground environment *(defaults to 'play')* is special and upon entry a default configuration is copied and customized for the user *(uses the USER environment var)*
 
-#### **- Building**
+#### **AWS Credentials**
 
-There are a few prerequestes before doing a build, namely the KMS key use for at-rest encryption of the secrets and the terraform state bucket (though this one might be wrapped up in the script by now).
+AWS credentials are be passed into the build container either by environment variables or credentials file. On entrypoint, the run.kube will check for default access and secret keys in the user environment; if absent, it will use the aws credentials file *($HOME/.aws/credentials)* mapping the environment label to the aws profile name. At the moment only static keys are supported, though the intention is to add support for MFA and assuming remote roles.
 
-* Ensure you have created a AWS KMS key *(in the correct region)* and updated the kms_master_id with the KeyID in the environment file.
-* Ensure you have created an S3 bucket for the terraform remote state and update the *terraform_bucket_name* variable in the environment file.
-* Ensure you have a aws credentials file location in ${HOME}/.aws/credentials and have updated the environment file with the correct aws_profile and aws_account.
-* Ensure you have updated the *kubeapi_access_list* and *ssh_access_list* environment variable to include your ip address.
+**Keys Points**
+> - Unless access keys are passed via environment variables i.e. AWS_ACCESS_KEY_ID etc the aws shared credentials is read by default with the environment name mapping to the profile name.
+> - The playground environment is special, it defaults to aws profile 'play', copies and customizes a template for use.
 
-```shell
-# Create the terraform bucket
+
+#### **Getting Started**
+
+There are a few prerequisites before doing a build, namely the KMS key use for at-rest encryption of the secrets and the terraform state bucket (though this one might be wrapped up in the script by now).
+
+> - Ensure you have created a AWS KMS key *(in the correct region)* and updated the kms_master_id with the KeyID in the environment file.
+> - Ensure you have created an S3 bucket for the terraform remote state and update the *terraform_bucket_name* variable in the environment file.
+> - Ensure you have a aws credentials file location in ${HOME}/.aws/credentials and have updated the environment file with the correct aws_profile and aws_account.
+> - Ensure you have updated the *kubeapi_access_list* and *ssh_access_list* environment variable to include your ip address.
+
+```bash
+# --> Create the terraform bucket
 [jest@starfury kubernetes-platform]$ ./play.kube
 --> Running Platform, with environment: play-jest
 [play-jest@platform] (master) $ kmsctl bucket create --bucket play-jest-kube-terraform-eu-west-1
 ... Update
 
-#  Create the KMS key for encryption
+# --> Create the KMS key for encryption
 [play-jest@platform] (master) $ kmsctl kms create --name kube-play --description "A shared KMS used for playground builds"
 ...
 
-# Remember to update the variables (kms_master_id and terraform_bucket_name) in the platform/env.tfvars file !!
+# --> Remember to update the variables (kms_master_id and terraform_bucket_name) in the platform/env.tfvars file !!
 # Then update teh public and private dns zone for environment and the access lists for ssh and kubeapi access (defaults 0.0.0.0/0)
 
-# Kicking off the a build
+# --> Kicking off the a build
 [play-jest@platform] (master) $ run  
 ... BUILDING ...
 
-# Listing the instances
+# --> Listing the instances
 [play-jest@platform] (master) $ aws-instances
 --------------------------------------------------------------------------------------------------------
 |                                           DescribeInstances                                          |
@@ -52,7 +66,7 @@ There are a few prerequestes before doing a build, namely the KMS key use for at
 |  play-jest-secure |  10.80.10.155 |  None          |  i-0a9c35b5c68f49100 |  running  |  eu-west-1a  |
 +-------------------+---------------+----------------+----------------------+-----------+--------------+
 
-# List all the ELBS
+# --> List all the ELBS
 [play-jest@platform] (master) $ aws-elbs
 --------------------------------------------------------------------------------------------------------------------
 |                                               DescribeLoadBalancers                                              |
@@ -96,14 +110,15 @@ kube-system   Active    20m
 # By default kubedns and the dashboard has been automatically deployed via the kube-addons manifest.
 ```
 
-#### **- Bastion**
+#### **Bastion Hosts & SSH Access**
 
-All the Kubernetes instances are on private subnets and inaccesable publically, in order to ssh to the boxes you have to hop on via the bastion instances.
+All the instances for the cluster are presently hidden away on private subnet's with not direct access to the internet. Outbound is handled via the managed NAT gateways and inbound can only come from the ELB layers *(by default all node ports from 30000 - 32767 are permitted between the ELB and compute security groups)*.
 
 ```shell
 # Jump inside the container if not already there
 [jest@starfury kubernetes-platform]$ ./play.kube
 --> Running Platform, with environment: play-jest
+
 # You have to ensure the secrets are downloaded - assuming a new container, you can fetch them via
 [play-jest@platform] (master) $ fetch-secrets
 [v] --> Fetching the secrets to the s3 bucket: play-jest-secrets
@@ -116,6 +131,7 @@ retrieved the file: addons/kubedns/deployment.yml and wrote to: secrets/addons/k
 [play-jest@platform] (master) $ agent-setup
 Agent pid 1565
 Identity added: /root/.ssh/id_rsa (/root/.ssh/id_rsa)
+
 # Get the bastion host address
 [play-jest@platform] (master) $ aws-instances | grep bas
 |  play-jest-bastion|  10.80.110.30 |  54.x.x.x |  i-0041f7a15dxxxxxx |  running  |  eu-west-1a  |
@@ -127,23 +143,30 @@ Failed Units: 1
   update-engine.service
 core@ip-10-80-110-30 ~ $ ssh 10.80.10.100
 ```
+**Key Points**
 
-#### **- Kubernetes Configuration**
+> - The terraform variable *ssh_access_list* controls access to SSH via the Management security group.
+> - The SSH key for the instance is kept in the secrets bucket under secrets/locked/environment_name
+> - You can setup SSH agent forwarding from within the container via the alias 'agent-setup', ensure you have already downloaded the secrets via fetch-secrets.
+> - The bastion hosts are run in a auto-scaling group, at the moment they are exposed directly to the internet, but long term I want to place them behind a ELB.
+
+
+#### **Kubernetes Configuration**
 
 The environment is broken into two main layer, secure and compute. Secure is where the Kubernetes master, controller and scheduler live, with compute being the worker nodes. The entire cluster is hidden on private subnets (secure, compute) with external internet access provided via the managed nat gateways. Note, the secure and compute subnets are not directly connected to a internet gateway, instead outbound in via nat and inbound load balancers must be place into the 'elb' subnets. Another subnet 'mgmt' (connected to the IGW) is where the bastion host lives. Note, I still need to finish of the bastion module!!
 
-#### **- Etcd Cluster**
+#### **Etcd Cluster**
 
 The Etcd cluster which runs in the secure layer is made of a auto-scaling group spread across x availablity zones; terraform for create x EBS volumes and x ENI for the cluster nodes; the bootstrapping of the cluster involves a node in a ASG coming up, looking for available volumes and ENI's in it's availablity zone and attaching before starting etcd2. The process essentially wrapps static volumes and ip addresses to a bunch of random auto-scaling nodes.
 
-#### **- Kubernetes Services / Manifests**
+#### **Kubernetes Services / Manifests**
 
 Most of the Kubernetes service, barring the kubelet are deployed using manifests these are first templated via Terraform and uploaded to the secrets bucket. Two processes in the boxes (namely in the secure cloudinit) are responsible for keeping the manifests in sync with bucket versions, just updates the services should be a simple as amending the file, performing a run to template and upload and wait (default 10 seconds) for the files to be synchronized downstream; with the kubelet taking care of the rest. Why not, deploy the files as part of the cloudinit? At present the Kubenetes master is running on the Etcd cluster boxes, rolling out changes to these is precarious given it's affects on the cluster membership. Perhaps a better approach would be to add more boxes into the mix and run the Kubernetes core services in a additional auto-scaling group??
 
-#### **- Secrets**
+#### **Secrets**
 
 All the secrets for the platform are kept in an s3 bucket and encrypted via KMS. Once the platform is built you can check directory structure under platform/secrets. Pulling or uploading the secrets simply involves fetch-secrets or upload-secrets aliases. Note, uploading ABAC or Kubernetes tokens.csv requires only an upload, the changes will be automatically reloade by [kube-auth](https://github.com/gambol99/kube-auth) service.
 
-#### **- Bash Aliases**
+#### **Bash Aliases**
 
 There's a number of helper aliases and methods brought into the container (scripts/.bashrc)
