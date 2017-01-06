@@ -79,23 +79,54 @@ public_name_services = [
     ns-678.awsdns-20.net
 ]
 
+[play-jest@platform] (master) $ kubectl -s https://play-jest-kubeapi-2081633621.eu-west-1.elb.amazonaws.com get nodes
+NAME                                         STATUS                     AGE
+ip-10-80-10-147.eu-west-1.compute.internal   Ready,SchedulingDisabled   4m
+ip-10-80-11-141.eu-west-1.compute.internal   Ready,SchedulingDisabled   4m
+ip-10-80-12-193.eu-west-1.compute.internal   Ready,SchedulingDisabled   5m
+ip-10-80-20-160.eu-west-1.compute.internal   Ready                      5m
+ip-10-80-21-84.eu-west-1.compute.internal    Ready                      5m
+ip-10-80-22-252.eu-west-1.compute.internal   Ready                      5m
+
 [root@platform kube-coreos]$  kubectl -s https://play-jest-kubeapi-2081633621.eu-west-1.elb.amazonaws.com get ns
 NAME          STATUS    AGE
 default       Active    20m
 kube-system   Active    20m
+
+# By default kubedns and the dashboard has been automatically deployed via the kube-addons manifest.
 ```
 
-#### **- Bastion **
+#### **- Bastion**
 
 All the Kubernetes instances are on private subnets and inaccesable publically, in order to ssh to the boxes you have to hop on via the bastion instances.
 
 ```shell
+# Jump inside the container if not already there
 [jest@starfury kubernetes-platform]$ ./play.kube
 --> Running Platform, with environment: play-jest
+# You have to ensure the secrets are downloaded - assuming a new container, you can fetch them via
+[play-jest@platform] (master) $ fetch-secrets
+[v] --> Fetching the secrets to the s3 bucket: play-jest-secrets
+retrieved the file: addons/calico/deployment.yml and wrote to: secrets/addons/calico/deployment.yml
+retrieved the file: addons/dashboard/deployment.yml and wrote to: secrets/addons/dashboard/deployment.yml
+retrieved the file: addons/kubedns/deployment.yml and wrote to: secrets/addons/kubedns/deployment.yml
+...
 
+# You can setup the ssh-agent via the alias
+[play-jest@platform] (master) $ agent-setup
+Agent pid 1565
+Identity added: /root/.ssh/id_rsa (/root/.ssh/id_rsa)
+# Get the bastion host address
+[play-jest@platform] (master) $ aws-instances | grep bas
+|  play-jest-bastion|  10.80.110.30 |  54.x.x.x |  i-0041f7a15dxxxxxx |  running  |  eu-west-1a  |
 
+[play-jest@platform] (master) $ ssh 54.x.x.x.
+CoreOS alpha (1192.2.0)
+Update Strategy: No Reboots
+Failed Units: 1
+  update-engine.service
+core@ip-10-80-110-30 ~ $ ssh 10.80.10.100
 ```
-
 
 #### **- Kubernetes Configuration**
 

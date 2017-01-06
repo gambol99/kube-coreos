@@ -124,6 +124,9 @@ variable "secure_data_encrypted" {
 variable "secure_docker_volume" {
   description = "The size in gigabytes for the docker volume partition"
 }
+variable "secure_data_volume_type" {
+  description = "The volume type for the etcd data volume"
+}
 variable "secure_asg_grace_period" {
   description = "The grace period between rebuild in the secure auto-scaling group"
 }
