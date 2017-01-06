@@ -52,7 +52,6 @@ run() {
     -v ${PWD}/scripts:${WORKDIR}/scripts \
     -v ${PWD}/scripts/.bashrc:/root/.bashrc \
     -v ${PWD}/terraform/.terraformrc:/root/.terraformrc \
-    -v ${PWD}/terraform/modules:${WORKDIR}/terraform/modules \
     -v ${PWD}/terraform/main.tf:${WORKDIR}/terraform/main.tf \
     -v ${PWD}/terraform/provider.tf:${WORKDIR}/terraform/provider.tf \
     -v ${PWD}/terraform/variables.tf:${WORKDIR}/terraform/variables.tf \
