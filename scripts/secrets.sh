@@ -28,14 +28,21 @@ fetch_secrets() {
 }
 
 setup_secrets() {
+  local kubeconfig="${PWD}/${SECRETS_DIR}/secure/kubeconfig_admin"
+  local sshkey="${SECRETS_DIR}/locked/${PLATFORM_ENV}"
+
   mkdir -p ${HOME}/.kube
   if [[ ! -L "${HOME}/.kube/config" ]]; then
-    ln -sf ${PWD}/${SECRETS_DIR}/secure/kubeconfig_admin ${HOME}/.kube/config
+    if [[ -f "${kubeconfig}" ]]; then
+      ln -sf ${kubeconfig} ${HOME}/.kube/config
+    fi
   fi
   mkdir -p ${HOME}/.ssh
   if [[ ! -f ${HOME}/.ssh/id_rsa ]]; then
-    cp ${SECRETS_DIR}/locked/${PLATFORM_ENV} ${HOME}/.ssh/id_rsa
-    chmod 0400 ${HOME}/.ssh/id_rsa
+    if [[ -f "${sshkey}" ]]; then
+      cp ${sshkey} ${HOME}/.ssh/id_rsa
+      chmod 0400 ${HOME}/.ssh/id_rsa
+    fi
   fi
   if [[ ! -f "${HOME}/.ssh/config" ]]; then
     cat <<EOF > ${HOME}/.ssh/config
