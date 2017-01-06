@@ -20,7 +20,7 @@ resource "aws_iam_instance_profile" "bastion" {
 }
 
 ## Userdata Template
-data "template_file" "user_data" {
+data "gotemplate_file" "user_data" {
   template = "${file("${path.module}/assets/cloudinit/bastion.yml")}"
 
   vars {
@@ -45,7 +45,7 @@ resource "aws_launch_configuration" "bastion" {
   key_name                    = "${var.key_name}"
   name_prefix                 = "${var.environment}-bastion-"
   security_groups             = [ "${var.bastion_sg}" ]
-  user_data                   = "${data.template_file.user_data.rendered}"
+  user_data                   = "${data.gotemplate_file.user_data.rendered}"
 
   lifecycle {
     create_before_destroy = true
