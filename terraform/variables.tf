@@ -199,6 +199,10 @@ variable "secure_docker_volume" {
   description = "The size in gigabytes for the docker volume partition"
   default     = 32
 }
+variable "secure_data_volume_type" {
+  description = "The volume type for the etcd data volume"
+  default     = "standard"
+}
 variable "secure_asg_grace_period" {
   description = "The grace period between rebuild in the secure auto-scaling group"
   default     = 10

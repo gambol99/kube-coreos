@@ -35,6 +35,7 @@ module "master" {
   secure_asg_grace_period  = "${var.secure_asg_grace_period}"
   secure_data_encrypted    = "${var.secure_data_encrypted}"
   secure_data_volume       = "${var.secure_data_volume}"
+  secure_data_volume_type  = "${var.secure_data_volume_type}"
   secure_docker_volume     = "${var.secure_docker_volume}"
   secure_flavor            = "${var.secure_flavor}"
   secure_nodes             = "${var.secure_nodes}"
