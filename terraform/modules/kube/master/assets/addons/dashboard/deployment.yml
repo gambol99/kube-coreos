@@ -48,7 +48,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: dashboard
+  name: kubernetes-dashboard
   namespace: kube-system
   labels:
     name: dashboard
