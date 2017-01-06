@@ -56,12 +56,12 @@ coreos:
       RestartSec=10
       RuntimeDirectory=kubelet
       RuntimeDirectoryMode=0700
-      Environment=KUBELET_VERSION=${kubernetes_version}
-      Environment=KUBELET_ACI=${kubernetes_image}
+      Environment=KUBELET_IMAGE_TAG={{ .kubernetes_version }}
+      Environment=KUBELET_IMAGE_URL={{ .kubernetes_image }}
       EnvironmentFile=/etc/kmsctl
       EnvironmentFile=/etc/environment
       EnvironmentFile=/etc/aws-environment
-      Environment="RKT_OPTS=--volume dns,kind=host,source=/etc/resolv.conf \
+      Environment="RKT_RUN_ARGS=--volume dns,kind=host,source=/etc/resolv.conf \
         --mount volume=dns,target=/etc/resolv.conf \
         --mount volume=etc-ssl-certs,target=/etc/ssl/certs \
         --mount volume=stage,target=/tmp \
@@ -78,7 +78,7 @@ coreos:
         --allow-privileged=true \
         --cpu-cfs-quota=true \
         --host-network-sources=* \
-        --hostname-override=$${COREOS_PRIVATE_IPV4} \
+        --hostname-override=${COREOS_PRIVATE_IPV4} \
         --image-gc-high-threshold=60 \
         --image-gc-low-threshold=40 \
         --logtostderr=true \
@@ -89,13 +89,13 @@ coreos:
 write_files:
 - path: /etc/kmsctl
   content: |
-    AWS_S3_BUCKET=${secrets_bucket_name}
-    AWS_DEFAULT_REGION=${aws_region}
+    AWS_S3_BUCKET={{ .secrets_bucket_name }}
+    AWS_DEFAULT_REGION={{ .aws_region }}
 - path: /etc/aws-environment
   content: |
-    AWS_REGION=${aws_region}
-    DNS_ZONE_NAME=${private_zone_name}
-    ENVIRONMENT=${environment}
+    AWS_REGION={{ .aws_region }}
+    DNS_ZONE_NAME={{ .private_zone_name }}
+    ENVIRONMENT={{ .environment }}
 - path: /etc/kubernetes/manifests/kube-manifests.yml
   permissions: 0444
   owner: root
@@ -109,12 +109,12 @@ write_files:
       hostNetwork: true
       containers:
       - name: manifests
-        image: ${kmsctl_image}
+        image: {{ .kmsctl_image }}
         args:
-        - --region=${aws_region}
+        - --region={{ .aws_region }}
         - get
         - --output-dir=/etc/kubernetes/manifests
-        - --bucket=${secrets_bucket_name}
+        - --bucket={{ .secrets_bucket_name }}
         - --sync=true
         - --recursive=true
         - manifests/bastion
