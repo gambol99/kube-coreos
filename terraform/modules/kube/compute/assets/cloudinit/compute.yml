@@ -126,11 +126,11 @@ coreos:
       RestartSec=10
       RuntimeDirectory=kubelet
       RuntimeDirectoryMode=0700
-      Environment=KUBELET_VERSION={{ .kubernetes_version }}
-      Environment=KUBELET_ACI={{ .kubernetes_image }}
+      Environment=KUBELET_IMAGE_TAG={{ .kubernetes_version }}
+      Environment=KUBELET_IMAGE_URL={{ .kubernetes_image }}
       EnvironmentFile=/etc/kmsctl
       EnvironmentFile=/etc/environment
-      Environment="RKT_OPTS=--uuid-file-save=/var/run/kubelet-pod.uuid \
+      Environment="RKT_RUN_ARGS=--uuid-file-save=/var/run/kubelet-pod.uuid \
         --volume dns,kind=host,source=/etc/resolv.conf \
         --mount volume=dns,target=/etc/resolv.conf \
         --mount volume=etc-ssl-certs,target=/etc/ssl/certs \
