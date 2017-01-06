@@ -1,7 +1,6 @@
 #
-#   Author: Rohith
+#   Author: Rohith Jayawardene
 #   Date: 2015-12-16 14:39:27 +0000 (Wed, 16 Dec 2015)
-#
 #
 NAME=kube-coreos
 REGISTRY ?= quay.io
