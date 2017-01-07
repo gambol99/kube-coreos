@@ -137,7 +137,7 @@ create_kubernetes_configs() {
   # step: make the kubeconfig for proxy, kubelet and admin
   make_credentials "kubelet" "https://${CONFIG_KUBEAPI_INTERNAL_HOSTNAME}.${CONFIG_PRIVATE_ZONE_NAME}" "${SECRETS_DIR}/compute/kubeconfig_kubelet"
   make_credentials "proxy" "https://${CONFIG_KUBEAPI_INTERNAL_HOSTNAME}.${CONFIG_PRIVATE_ZONE_NAME}" "${SECRETS_DIR}/common/kubeconfig_proxy"
-  make_credentials "admin" "https://${CONFIG_KUBEAPI_INTERNAL_HOSTNAME}.${CONFIG_DNS_ZONE_NAME}" "${SECRETS_DIR}/secure/kubeconfig_admin"
+  make_credentials "admin" "https://${CONFIG_KUBEAPI_INTERNAL_HOSTNAME}.${CONFIG_DNS_ZONE_NAME}" "${SECRETS_DIR}/locked/kubeconfig_admin"
   # step: copy the admin kubeconfig to $HOME
   mkdir -p ${HOME}/.kube
   [[ -L "${HOME}/.kube/config" ]] || ln -sf ${PWD}/${SECRETS_DIR}/locked/kubeconfig_admin ${HOME}/.kube/config
