@@ -102,6 +102,9 @@ ip-10-80-20-160.eu-west-1.compute.internal   Ready                      5m
 ip-10-80-21-84.eu-west-1.compute.internal    Ready                      5m
 ip-10-80-22-252.eu-west-1.compute.internal   Ready                      5m
 
+# Note is usually takes between 3-5 minutes before seeing the API, it has to download containers (kubelet, hyperkube, kube-auth, kmsctl)
+# and two binaries (kmsctl, smilodon)
+
 [root@platform kube-coreos]$  kubectl -s https://play-jest-kubeapi-2081633621.eu-west-1.elb.amazonaws.com get ns
 NAME          STATUS    AGE
 default       Active    20m
@@ -141,6 +144,7 @@ CoreOS alpha (1192.2.0)
 Update Strategy: No Reboots
 Failed Units: 1
   update-engine.service
+# go into a master node
 core@ip-10-80-110-30 ~ $ ssh 10.80.10.100
 ```
 **Key Points**
