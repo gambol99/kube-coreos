@@ -26,7 +26,7 @@ variable "coreos_image_owner" {
 ## KUBERNETES ##
 variable "kubernetes_image" {
   description = "The docker kubernetes image we are using"
-  default     = "quay.io/coreos/hyperkube:v1.4.7_coreos.0"
+  default     = "quay.io/coreos/hyperkube:v1.5.1_coreos.0"
 }
 variable "kubeapi_internal_dns" {
   description = "The dns name of the internal kubernetes api elb"
