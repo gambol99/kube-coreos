@@ -11,7 +11,8 @@ RET=0
 # step: check if a remote bucket was provided
 if [ -n "${TERRAFORM_BUCKET}" ]; then
   if [ ! -f "${PROVIDER_DIR}/.terraform/terraform.tfstate" ]; then
-    annonce "Setting the remote terraform config, path: s3://${TERRAFORM_BUCKET}/${AWS_DEFAULT_REGION}/${ENVIRONMENT}/hoddat_users/terraform.tfstate"
+    BUCKET_KEY="${AWS_DEFAULT_REGION}/${ENVIRONMENT}/kube-platform/terraform.tfstate"
+    annonce "Setting the remote terraform config, path: s3://${TERRAFORM_BUCKET}/${BUCKET_KEY}"
     (
       cd ${PROVIDER_DIR} && \
       terraform remote config \
@@ -19,7 +20,7 @@ if [ -n "${TERRAFORM_BUCKET}" ]; then
         --backend-config="access_key=${AWS_ACCESS_KEY_ID}" \
         --backend-config="bucket=${TERRAFORM_BUCKET}" \
         --backend-config="encrypt=true" \
-        --backend-config="key=${AWS_DEFAULT_REGION}/${ENVIRONMENT}/kube-platform/terraform.tfstate" \
+        --backend-config="key=${BUCKET_KEY}" \
         --backend-config="region=${AWS_DEFAULT_REGION}" \
         --backend-config="secret_key=${AWS_SECRET_ACCESS_KEY}"
     ) || {

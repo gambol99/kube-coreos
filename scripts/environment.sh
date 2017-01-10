@@ -32,7 +32,7 @@ prompt_assurance() {
   # check: are we double checking
   if [[ "${play_check}" == true && ! "${PLATFORM_ENV}" =~ ^play.*$ ]]; then
     echo -n -e "Are you ABSOLUTELY SURE, given this is a non-playground account? (yes/no) "; read sure
-    [[ ! "${sure}" =~ ^(yes|[yY])$ ]] && return 1
+    [[ "${sure}" =~ ^(yes|[yY])$ ]] || return 1
   fi
   return 0
 }

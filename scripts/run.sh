@@ -12,7 +12,7 @@ fi
 ## add in the default command
 CMD=${1:-"apply"}
 
-scripts/terraform.sh apply -target="module.platform.aws_s3_bucket.secrets" || failed "unable to create the buckets" &&
+scripts/terraform.sh apply -target="module.platform.aws_s3_bucket.secrets" || failed "unable to create the secrets bucket" &&
 scripts/secrets.sh fetch    || failed "unable to fetch secrets from the bucket" &&
 scripts/keypairs.sh         || failed "unable to generate the keypairs" &&
 scripts/assets.sh           || failed "unable to generate the assets" &&
