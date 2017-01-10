@@ -105,12 +105,17 @@ ip-10-80-22-252.eu-west-1.compute.internal   Ready                      5m
 # Note is usually takes between 3-5 minutes before seeing the API, it has to download containers (kubelet, hyperkube, kube-auth, kmsctl)
 # and two binaries (kmsctl, smilodon)
 
-[root@platform kube-coreos]$  kubectl -s https://play-jest-kubeapi-2081633621.eu-west-1.elb.amazonaws.com get ns
+[play-jest@platform] (master) $ kubectl -s https://play-jest-kubeapi-2081633621.eu-west-1.elb.amazonaws.com get ns
 NAME          STATUS    AGE
 default       Active    20m
 kube-system   Active    20m
 
 # By default kubedns and the dashboard has been automatically deployed via the kube-addons manifest.
+
+# Cleaning up the environment
+[play-jest@platform] (master) $ cleanup
+This will DELETE ALL resources, are you sure? (yes/no) yes
+... 
 ```
 
 #### **Bastion Hosts & SSH Access**
