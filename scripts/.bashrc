@@ -4,6 +4,12 @@
 #
 export WORKDIR=/platform
 
+ENVIRONMENTS_DIR="${WORKDIR}/environments"
+PLAYGROUND_DEFAULT="${ENVIRONMENTS_DIR}/play.tfvars"
+PLAYGROUND_ENV="play-${USER}"
+PLAYGROUND_FILE="${ENVIRONMENTS_DIR}/play-${USER}.tfvars"
+PLAYGROUND_PROFILE=${PLAYGROUND_PROFILE:-"play"}
+
 [[ -f "${WORKDIR}/scripts/environment.sh" ]] && source "${WORKDIR}/scripts/environment.sh"
 [[ -f "/etc/profile.d/bash_completion.sh" ]] && source "/etc/profile.d/bash_completion.sh"
 
@@ -15,7 +21,7 @@ alias ..="cd .."
 # source in kubectl completion
 source <(kubectl completion bash)
 
-export PS1="[${PLATFORM_ENV}@\W] (${YELLOW}${GIT_BRANCH}${NC}) $ "
+export PS1="[${PLATFORM_ENV}@\W] (${YELLOW}${GIT_BRANCH:-"unknown"}${NC}) $ "
 export PATH=$PATH:${WORKDIR}/scripts
 
 plan() { run_platform scripts/terraform.sh plan; }
@@ -31,14 +37,11 @@ agent-setup() {
 
 # apply if responsible to applying the terraform config
 apply() {
-  local force="$1"
-  if [[ ! "${force}" =~ ^(-f|--force)$ ]]; then
-    if ! prompt_assurance "Are you sure you want perform a terraform apply?" false; then
-      return
-    fi
+  if prompt_assurance "Are you sure you want perform a terraform apply?" true; then
+    run_platform scripts/terraform.sh apply
   fi
-  run_platform scripts/terraform.sh apply
 }
+
 
 show-cert() {
   local filename=$1
@@ -128,3 +131,6 @@ cleanup() {
     ) || error "unable to delete the entire enviroment"
   fi
 }
+
+# step: print a friendly opening message
+echo -e "--> Running Platform, with environment: ${YELLOW}${PLATFORM_ENV}${NC}"

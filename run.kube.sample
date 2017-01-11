@@ -1,14 +1,13 @@
 #!/usr/bin/env bash
+#
+# A sample build container entry script which can be used by the actual instances
+#
 
 ENVIRONMENTS_DIR="environments"
-GIT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+GIT_BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null)
 PLATFORM_ENV=${PLATFORM_ENV:-""}
 PLATFORM_IMAGE=${PLATFORM_IMAGE:="quay.io/gambol99/kube-coreos"}
 PLATFORM_VERSION=${PLATFORM_VERSION:-"latest"}
-PLAYGROUND_DEFAULT="${ENVIRONMENTS_DIR}/play.tfvars"
-PLAYGROUND_ENV="play-${USER}"
-PLAYGROUND_FILE="${ENVIRONMENTS_DIR}/play-${USER}.tfvars"
-PLAYGROUND_PROFILE=${PLAYGROUND_PROFILE:-"playground"}
 WORKDIR="/platform"
 NC='\e[0m'
 YELLOW='\e[0;33m'
@@ -21,9 +20,7 @@ Usage: $(basename $0) -e <ENVIRONMENT>
   -h|--help               : display this usage menu
 
 EOF
-  if [[ -n $@ ]]; then
-    failed "$@"
-  fi
+  [[ -n $@ ]] && failed "$@"
 }
 
 annonce() {
@@ -37,23 +34,18 @@ failed() {
 
 # run is responsible for creating the platform container and passing environment
 run() {
-  echo -e "--> Running Platform, with environment: ${YELLOW}${PLATFORM_ENV}${NC}"
-
-  #-v /home/jest/go/src/github.com/gambol99/terraform-gotemplate/bin/gotemplate:/usr/bin/gotemplate \
   /usr/bin/docker run -ti --rm \
-    -w ${WORKDIR} \
+    -e USER=${USER} \
     -e GIT_BRANCH="${GIT_BRANCH}" \
     -e PLATFORM_ENV="${PLATFORM_ENV}" \
     -e AWS_ACCESS_KEY_ID="${AWS_ACCESS_KEY_ID}" \
     -e AWS_DEFAULT_REGION="${AWS_DEFAULT_REGION}" \
     -e AWS_SECRET_ACCESS_KEY="${AWS_SECRET_ACCESS_KEY}" \
-    -v ${PWD}/${ENVIRONMENT_FILE}:${WORKDIR}/env.tfvars \
     -v ${PWD}/ca:${WORKDIR}/ca \
+    -v ${PWD}/environments:${WORKDIR}/environments \
     -v ${PWD}/scripts:${WORKDIR}/scripts \
     -v ${PWD}/scripts/.bashrc:/root/.bashrc \
-    -v ${PWD}/terraform/.terraformrc:/root/.terraformrc \
-    -v ${PWD}/terraform/main.tf:${WORKDIR}/terraform/main.tf \
-    -v ${PWD}/terraform/variables.tf:${WORKDIR}/terraform/variables.tf \
+    -v ${PWD}/scripts/.terraformrc:/root/.terraformrc \
     ${PLATFORM_IMAGE}:${PLATFORM_VERSION}
 }
 
@@ -62,19 +54,6 @@ get_credentials() {
   [[ -n "${AWS_ACCESS_KEY_ID}"     ]] || AWS_ACCESS_KEY_ID=$(aws configure --profile ${PLATFORM_ENV} get aws_access_key_id)
   [[ -n "${AWS_SECRET_ACCESS_KEY}" ]] || AWS_SECRET_ACCESS_KEY=$(aws configure --profile ${PLATFORM_ENV} get aws_secret_access_key)
   [[ -n "${AWS_DEFAULT_REGION}"    ]] || AWS_DEFAULT_REGION=$(aws configure --profile ${PLATFORM_ENV} get region)
-}
-
-# setup_playground is responsible for prepping a playground environment if required
-setup_playground() {
-  if [[ "${PLATFORM_ENV}" == "play" ]]; then
-    if [[ ! -f "${PLAYGROUND_FILE}" ]]; then
-      annonce "Copying the default playground file: ${PLAYGROUND_DEFAULT} to: ${PLAYGROUND_FILE}"
-      annonce "Ensure to update the required envirnoment variables in the ${WORKDIR}/env.tfvars file"
-      cp ${PLAYGROUND_DEFAULT} ${PLAYGROUND_FILE} || failed "unable to copy the default playground file: ${PLAYGROUND_DEFAULT}"
-      sed -i "s/PLATFORM_ENV/${USER}/g" ${PLAYGROUND_FILE} || failed "unable to update the username in file: ${PLAYGROUND_FILE}"
-    fi
-    export PLATFORM_ENV=${PLAYGROUND_ENV}
-  fi
 }
 
 # step: get the command line options
@@ -88,14 +67,10 @@ done
 
 # step: retrieve the credentials
 get_credentials
-# step: 'play' environment is special, lets copy the playground config for this user
-setup_playground
 # step: set the environment file
 ENVIRONMENT_FILE="./${ENVIRONMENTS_DIR}/${PLATFORM_ENV}.tfvars"
 
 [[ -n "${PLATFORM_ENV}"          ]] || usage "you have not specified an envirnoment (either -e or set PLATFORM_ENV envirnoment variable)"
 [[ -f "${ENVIRONMENT_FILE}"      ]] || usage "the environment file: '${YELLOW}${ENVIRONMENT_FILE}${NC}' does not exist"
-[[ -n "${AWS_ACCESS_KEY_ID}"     ]] || usage "unable to retrieve aws access for environment: ${PLATFORM_ENV}"
-[[ -n "${AWS_SECRET_ACCESS_KEY}" ]] || usage "unable to retrieve aws secret key for environment: ${PLATFORM_ENV}"
 
 run

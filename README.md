@@ -1,17 +1,28 @@
 ## **Kubernetes Platform**
 ---
-
-Kubernetes Platform is a collection of [terraform](terraform.io) modules, scripts and build container used to maintainer an collection of Kubernetes environments. All the requirements and prerequisites are packaged into the build container.
+Kubernetes Platform is a build container, scripts and environment setup container for a Kubernetes cluster. The container provides a generic entrypoint for the man
 
 #### **Build container**
 
-All the software requirements of the build are packaged up in a container; the Dockerfile for which can be found in the root. In order to build the container simply do a 'make' in the root folder. You can then jump inside via run.kube -e *ENV* script or use a playground via ./play.kube
+All the software requirements of the build are packaged up in a container; the Dockerfile for which can be found in the root. In order to build the container simply do a 'make' in the root folder. You can then jump inside via run.kube -e *ENV* script or use a playground via ./play.kube. The responsiblity of the container is to provide some default variables kube-tf modules and to provide a quick provisioning of the environment. The intended use would is to map credentials, environment files and any terraform files.
 
 **Key Points**
 
-> - You can build the container via a local Makefile in the root of this repository, make
+> - You can build the container via a local Makefile in the root of this repository, type: make
+> - The build container itself is nothing more than a generic entrypoint, providing the tools and the environment setup
 
-#### **Environments**
+#### **How would you use the container**
+
+An exmaple of how you use the build can be found in [kube-platform](https://github.com/gambol99/kube-platform). Essentially, you need to provide the build container with the credentials, the environment files and your custom terraform files.
+
+**Volume Mapping**
+- environments -> platform/environments
+- terraform -> platform/terraform/config.d
+
+Because of the lack of support for recursive directories we need a
+
+#### **Environment Setup**
+
 The environment files are kept in the environments/ directory; most of attributes has defaults but elements such as as DNS zone, KMS keys are must all be filled into before. Jump to the Getting Started tutorial for an example.
 
 > **Note**: the playground environment *(defaults to 'play')* is special and upon entry a default configuration is copied and customized for the user *(uses the USER environment var)*
@@ -23,7 +34,6 @@ AWS credentials are be passed into the build container either by environment var
 **Keys Points**
 > - Unless access keys are passed via environment variables i.e. AWS_ACCESS_KEY_ID etc the aws shared credentials is read by default with the environment name mapping to the profile name.
 > - The playground environment is special, it defaults to aws profile 'play', copies and customizes a template for use.
-
 
 #### **Getting Started**
 
@@ -115,7 +125,7 @@ kube-system   Active    20m
 # Cleaning up the environment
 [play-jest@platform] (master) $ cleanup
 This will DELETE ALL resources, are you sure? (yes/no) yes
-... 
+...
 ```
 
 #### **Bastion Hosts & SSH Access**
