@@ -59,7 +59,7 @@ case "${COMMAND}" in
       cd ${PROVIDER_DIR} && $TERRAFORM get
     ) || failed "unable to complete terraform operation"
     ;;
-  show|graph|taint|output)
+  show|graph|taint|output|console)
     shift
     (
       cd ${PROVIDER_DIR} && $TERRAFORM get -update >/dev/null &&

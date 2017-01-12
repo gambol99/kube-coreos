@@ -54,7 +54,6 @@ setup_environment() {
   # step: check if we are entering a playground
   [[ -d "${TERRAFORM_CONFD}" ]] || failed "you have not mapped your terraform files into: ${TERRAFORM_CONFD}"
   # step: I really don't like this, not i'm not sure how else to provide the functionality
-  ln -sf ${WORKDIR}/.builtin/platform-vars.tf ${WORKDIR}/terraform/platform-vars.tf || failed "unable to map the platform variables file"
   ln -sf ${TERRAFORM_CONFD}/* ${WORKDIR}/terraform || failed "unable to symlink the environment into the terraform directory"
 }
 
