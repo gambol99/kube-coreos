@@ -9,6 +9,9 @@ PROVIDER_STATE_DIR="${WORKDIR}/state"
 RET=0
 
 # step: check if a remote bucket was provided
+[[ -z "${TERRAFORM_BUCKET}" ]] && failed "you have not specified a terraform state bucket in the environment file"
+
+# step: pull in or create the terraform remote state
 if [ -n "${TERRAFORM_BUCKET}" ]; then
   if [ ! -f "${PROVIDER_DIR}/.terraform/terraform.tfstate" ]; then
     BUCKET_KEY="${AWS_DEFAULT_REGION}/${ENVIRONMENT}/kube-platform/terraform.tfstate"

@@ -7,7 +7,7 @@ RUN dnf install -y -q git unzip procps-ng openssl jq which tar openssh-clients p
 RUN pip3 install awscli pyhcl
 
 ENV CFSSL_VERSION=1.2 \
-    TERRAFORM_VERSION=0.8.2 \
+    TERRAFORM_VERSION=0.8.4 \
     KMSCTL_VERSION=1.0.4 \
     KUBECTL_VERSION=1.4.7 \
     GOTEMPLATE_VERSION=0.0.2
@@ -31,5 +31,12 @@ RUN /usr/bin/aws --version && \
     /usr/bin/kubectl version --client && \
     /usr/bin/terraform version && \
     /usr/bin/kmsctl --version
+
+ADD ./builtin /platform/.builtin
+ADD ./ca /platform/ca
+ADD ./docs /platform/docs
+ADD ./scripts /platform/scripts
+ADD scripts/.bashrc /root/.bashrc
+ADD scripts/.terraformrc /root/.terraformrc
 
 ENTRYPOINT [ "/bin/bash" ]

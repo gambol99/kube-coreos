@@ -28,8 +28,8 @@ fetch_secrets() {
 }
 
 setup_secrets() {
-  local kubeconfig="${PWD}/${SECRETS_DIR}/secure/kubeconfig_admin"
-  local sshkey="${SECRETS_DIR}/locked/${PLATFORM_ENV}"
+  local kubeconfig="${WORKDIR}/${SECRETS_DIR}/locked/kubeconfig_admin"
+  local sshkey="${WORKDIR}/${SECRETS_DIR}/locked/${PLATFORM_ENV}"
 
   mkdir -p ${HOME}/.kube
   if [[ ! -L "${HOME}/.kube/config" ]]; then
