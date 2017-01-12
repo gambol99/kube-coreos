@@ -13,7 +13,7 @@ All the software requirements of the build are packaged up in a container; the D
 
 #### **How would you use the container**
 
-An exmaple of how you use the build can be found in [kube-platform](https://github.com/gambol99/kube-platform). Essentially, you need to provide the build container with the credentials, the environment files and your custom terraform files.
+An exmaple of how you use the build can be found in [kube-playground](https://github.com/gambol99/kube-playground) or [kube-platform](https://github.com/gambol99/kube-platform). Essentially, you need to provide the build container with the credentials, the environment files and your custom terraform files.
 
 **Volume Mapping**
 - environments -> platform/environments
@@ -38,13 +38,6 @@ AWS credentials are be passed into the build container either by environment var
 #### **Getting Started**
 
 Please checkout the [kube-playground](https://github.com/gambol99/kube-playground) repository for a demo / playground environment.
-
-There are a few prerequisites before doing a build, namely the KMS key use for at-rest encryption of the secrets and the terraform state bucket (though this one might be wrapped up in the script by now).
-
-> - Ensure you have created a AWS KMS key *(in the correct region)* and updated the kms_master_id with the KeyID in the environment file.
-> - Ensure you have created an S3 bucket for the terraform remote state and update the *terraform_bucket_name* variable in the environment file.
-> - Ensure you have a aws credentials file location in ${HOME}/.aws/credentials and have updated the environment file with the correct aws_profile and aws_account.
-> - Ensure you have updated the *kubeapi_access_list* and *ssh_access_list* environment variable to include your ip address.
 
 #### **Kubernetes Configuration**
 
