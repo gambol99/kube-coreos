@@ -2,7 +2,6 @@
 #
 # A sample build container entry script which can be used by the actual instances
 #
-
 ENVIRONMENTS_DIR="environments"
 GIT_BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null)
 PLATFORM_ENV=${PLATFORM_ENV:-""}
@@ -41,11 +40,8 @@ run() {
     -e AWS_ACCESS_KEY_ID="${AWS_ACCESS_KEY_ID}" \
     -e AWS_DEFAULT_REGION="${AWS_DEFAULT_REGION}" \
     -e AWS_SECRET_ACCESS_KEY="${AWS_SECRET_ACCESS_KEY}" \
-    -v ${PWD}/ca:${WORKDIR}/ca \
-    -v ${PWD}/environments:${WORKDIR}/environments \
-    -v ${PWD}/scripts:${WORKDIR}/scripts \
-    -v ${PWD}/scripts/.bashrc:/root/.bashrc \
-    -v ${PWD}/scripts/.terraformrc:/root/.terraformrc \
+    -v ${PWD}/${ENVIRONMENT_FILE}:${WORKDIR}/env.tfvars \
+    -v ${PWD}/terraform:${WORKDIR}/terraform/.config.d \
     ${PLATFORM_IMAGE}:${PLATFORM_VERSION}
 }
 
@@ -70,7 +66,7 @@ get_credentials
 # step: set the environment file
 ENVIRONMENT_FILE="./${ENVIRONMENTS_DIR}/${PLATFORM_ENV}.tfvars"
 
-[[ -n "${PLATFORM_ENV}"          ]] || usage "you have not specified an envirnoment (either -e or set PLATFORM_ENV envirnoment variable)"
+[[ -n "${PLATFORM_ENV}"          ]] || usage "you have not specified an environment (either -e or set PLATFORM_ENV envirnoment variable)"
 [[ -f "${ENVIRONMENT_FILE}"      ]] || usage "the environment file: '${YELLOW}${ENVIRONMENT_FILE}${NC}' does not exist"
 
 run
