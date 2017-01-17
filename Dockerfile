@@ -17,7 +17,7 @@ RUN curl -sL https://pkg.cfssl.org/R${CFSSL_VERSION}/cfssl_linux-amd64 -o /usr/b
     curl -sL https://github.com/gambol99/kmsctl/releases/download/v${KMSCTL_VERSION}/kmsctl-linux-amd64 > /usr/bin/kmsctl && chmod +x /usr/bin/kmsctl && \
     curl -sL https://github.com/gambol99/terraform-gotemplate/releases/download/v${GOTEMPLATE_VERSION}/gotemplate_v${GOTEMPLATE_VERSION}_linux_x86_64.gz | gunzip -c > /usr/bin/gotemplate && chmod +x /usr/bin/gotemplate && \
     curl -sL https://storage.googleapis.com/kubernetes-release/release/v${KUBE_VERSION}/bin/linux/amd64/kubectl -o /usr/bin/kubectl && chmod +x /usr/bin/kubectl && \
-    curl -sL https://storage.googleapis.com/kubernetes-release/release/v1${KUBE_VERSION}/bin/linux/amd64/kubefed -o /usr/bin/kubefed && chmod +x /usr/bin/kubefed && \
+    curl -sL https://storage.googleapis.com/kubernetes-release/release/v${KUBE_VERSION}/bin/linux/amd64/kubefed -o /usr/bin/kubefed && chmod +x /usr/bin/kubefed && \
     curl -sL https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip -o /tmp/terraform_linux_amd64.zip
 
 RUN mkdir -p /opt/terraform && \
