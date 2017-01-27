@@ -7,9 +7,9 @@ RUN dnf install -y -q git unzip procps-ng openssl jq which tar openssh-clients p
 RUN pip3 install awscli pyhcl
 
 ENV CFSSL_VERSION=1.2 \
-    TERRAFORM_VERSION=0.8.4 \
+    TERRAFORM_VERSION=0.8.5 \
     KMSCTL_VERSION=1.0.4 \
-    KUBE_VERSION=1.5.1 \
+    KUBE_VERSION=1.5.2 \
     GOTEMPLATE_VERSION=0.0.2
 
 RUN curl -sL https://pkg.cfssl.org/R${CFSSL_VERSION}/cfssl_linux-amd64 -o /usr/bin/cfssl && chmod +x /usr/bin/cfssl && \
